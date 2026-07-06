@@ -1,4 +1,3 @@
-
 window.JinHubKeySystem = window.JinHubKeySystem || {};
 
 window.JinHubKeySystem.init = function(slug, cfg){
@@ -297,6 +296,10 @@ window.JinHubKeySystem.init = function(slug, cfg){
       showNote(hasExpired
         ? 'Checkpoint completed! Choose Get a New Key or Renew an existing key.'
         : 'Checkpoint completed! Click Get a New Key to receive your key.');
+    } else if(!checkpointVerified && !waiting && currentCheckpoint > 0 && currentCheckpoint < requiredCheckpoints){
+      // Checkpoint parsial (misal 1/2 buat lootlabs) -- kasih tau user
+      // harus lanjut, jangan biarin keliatan kayak progress-nya ilang.
+      showNote('Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' complete. Press START again to continue.');
     } else if(inCooldown){
       showNote('Please wait a moment before starting a new checkpoint.');
     } else if(!waiting){
@@ -450,8 +453,11 @@ window.JinHubKeySystem.init = function(slug, cfg){
         return;
       }
       
-      // Reset checkpoint progress
-      currentCheckpoint = 0;
+      // PENTING: kalau server nge-resume sesi checkpoint yang masih pending
+      // (multi-checkpoint provider kayak lootlabs/workink), JANGAN reset
+      // currentCheckpoint ke 0 -- pakai checkpointCount yang server balikin
+      // biar progress bar tetep nampilin ronde yang udah kelar sebelumnya.
+      currentCheckpoint = data.checkpointCount || 0;
       requiredCheckpoints = data.requiredCheckpoints || TOTAL_CHECKPOINTS;
       
       pendingToken = data.token;
@@ -508,6 +514,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
         
         checkpointVerified = false;
         pendingToken = null;
+        currentCheckpoint = 0;
         clearPending();
         
         // Show success notifications based on mode
@@ -663,6 +670,8 @@ window.JinHubKeySystem.init = function(slug, cfg){
             if (statusData.success && statusData.verified) {
               pendingToken = pending.token;
               checkpointVerified = true;
+              currentCheckpoint = statusData.checkpointCount || requiredCheckpoints;
+              requiredCheckpoints = statusData.requiredCheckpoints || requiredCheckpoints;
               savePending(pending.token, true);
               
               // Load state dulu baru show alert
@@ -670,6 +679,27 @@ window.JinHubKeySystem.init = function(slug, cfg){
               showAlert('success', 'Checkpoint Completed!', 'Verification successful! You can now claim your key.');
               render();
               return; // Skip refreshState di bawah karena udah dipanggil
+            } else if (statusData.success && (statusData.checkpointCount || 0) > 0) {
+              // PENTING: checkpoint PARSIAL (misal 1/2 buat lootlabs) BUKAN
+              // sesi invalid -- token-nya masih hidup di server dan JANGAN
+              // di-clear. Simpen progress-nya biar progress bar kebaca
+              // bener, dan biarin pendingToken tetep tersimpan supaya START
+              // berikutnya nge-lanjutin sesi yang SAMA (lihat handleStart di
+              // src/api/getkey.js yang sekarang reuse sesi pending).
+              pendingToken = pending.token;
+              currentCheckpoint = statusData.checkpointCount;
+              requiredCheckpoints = statusData.requiredCheckpoints || requiredCheckpoints;
+              checkpointVerified = false;
+              savePending(pending.token, false);
+
+              await refreshState();
+              showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
+              render();
+              return; // Skip refreshState di bawah karena udah dipanggil
+            } else if (statusData.code === 'EXPIRED' || !statusData.success) {
+              // Beneran invalid/hangus (session udah gak ada di KV) -> baru
+              // aman buat di-clear.
+              clearPending();
             }
           } catch(e) {}
         }
@@ -691,12 +721,24 @@ window.JinHubKeySystem.init = function(slug, cfg){
         if(data.success && data.verified){
           pendingToken = pending.token;
           checkpointVerified = true;
+          currentCheckpoint = data.checkpointCount || requiredCheckpoints;
+          requiredCheckpoints = data.requiredCheckpoints || requiredCheckpoints;
           render();
-        } else {
+        } else if(data.success && (data.checkpointCount || 0) > 0){
+          // Sama kayak di atas: checkpoint parsial BUKAN sesi invalid,
+          // jangan di-clearPending -- cuma update progress-nya aja.
+          pendingToken = pending.token;
+          currentCheckpoint = data.checkpointCount;
+          requiredCheckpoints = data.requiredCheckpoints || requiredCheckpoints;
+          checkpointVerified = false;
+          render();
+        } else if(!data.success){
+          // Token beneran invalid/expired di server -> baru di-clear.
           clearPending();
         }
       }catch(e){
-        clearPending();
+        // Network glitch doang -- JANGAN buang progress yang udah ada
+        // cuma gara-gara request status gagal sesaat.
       }
     });
   })();
