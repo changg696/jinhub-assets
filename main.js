@@ -1,3 +1,4 @@
+
 window.JinHubKeySystem = window.JinHubKeySystem || {};
 
 window.JinHubKeySystem.init = function(slug, cfg){
@@ -382,12 +383,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
     try{
       const data = await apiGet('/status?token=' + encodeURIComponent(token));
       if(data.success){
-        // Update checkpoint progress dari server
+        // ALWAYS update checkpoint progress dari server (baik verified atau belum)
         currentCheckpoint = data.checkpointCount || 0;
         requiredCheckpoints = data.requiredCheckpoints || TOTAL_CHECKPOINTS;
         
         if(data.verified){
-          // SEMUA checkpoint selesai
+          // SEMUA checkpoint selesai - update progress ke nilai final SEBELUM render
+          currentCheckpoint = requiredCheckpoints; // FORCE ke nilai final (contoh: 2/2)
           stopPolling();
           waiting = false;
           checkpointVerified = true;
