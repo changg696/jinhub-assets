@@ -2388,23 +2388,38 @@ window.JinHubTabs = window.JinHubTabs || {}; // sudah diinit di worker.js, ini c
     });
   });
 
-  // Tab awal saat page pertama load - restore dari localStorage
+  // Tab awal saat page pertama load
   let initialTab = 'getkey'; // default fallback
   
-  // PRIORITASKAN localStorage untuk restore tab terakhir
-  try {
-    const savedTab = localStorage.getItem('jinhub_last_tab');
-    console.log('[JinHub] Saved tab from localStorage:', savedTab);
-    console.log('[JinHub] window.__initialTab from server:', window.__initialTab);
-    
-    if(savedTab && ['home','getkey','scripts','executors','premium'].includes(savedTab)){
-      initialTab = savedTab;
-      console.log('[JinHub] Using saved tab:', savedTab);
-    } else {
-      console.log('[JinHub] No saved tab, using default');
+  // STEP 1: Check URL path FIRST (highest priority)
+  const currentPath = window.location.pathname;
+  console.log('[JinHub] Current URL path:', currentPath);
+  
+  if(currentPath.includes('/home')){
+    initialTab = 'home';
+  } else if(currentPath.includes('/scripts')){
+    initialTab = 'scripts';
+  } else if(currentPath.includes('/executors')){
+    initialTab = 'executors';
+  } else if(currentPath.includes('/premium')){
+    initialTab = 'premium';
+  } else if(currentPath.includes('/getkey') || currentPath === '/'){
+    initialTab = 'getkey';
+  } else if(window.__initialTab && ['home','getkey','scripts','executors','premium'].includes(window.__initialTab)){
+    // STEP 2: Check server-injected __initialTab (dari ?tab= query atau #hash)
+    initialTab = window.__initialTab;
+  } else {
+    // STEP 3: Restore dari localStorage HANYA jika URL path tidak specify tab
+    try {
+      const savedTab = localStorage.getItem('jinhub_last_tab');
+      console.log('[JinHub] Saved tab from localStorage:', savedTab);
+      if(savedTab && ['home','getkey','scripts','executors','premium'].includes(savedTab)){
+        initialTab = savedTab;
+        console.log('[JinHub] Using saved tab:', savedTab);
+      }
+    } catch(e){
+      console.error('[JinHub] Error reading localStorage:', e);
     }
-  } catch(e){
-    console.error('[JinHub] Error reading localStorage:', e);
   }
   
   console.log('[JinHub] Final initialTab:', initialTab);
