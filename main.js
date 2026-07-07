@@ -2396,36 +2396,24 @@ window.JinHubTabs = window.JinHubTabs || {}; // sudah diinit di worker.js, ini c
   const currentPath = window.location.pathname;
   console.log('[JinHub] Current URL path:', currentPath);
   
-  // Check exact path match first (more reliable than .includes())
-  if(currentPath === '/' || currentPath === ''){
-    // Root URL - allow localStorage restore
-    initialTab = 'getkey'; // default
-    useLocalStorage = true;
-  } else if(currentPath === '/home' || currentPath.startsWith('/home/')){
+  if(currentPath.includes('/home')){
     initialTab = 'home';
-    useLocalStorage = false;
-    console.log('[JinHub] URL path matched /home');
-  } else if(currentPath === '/scripts' || currentPath.startsWith('/scripts/')){
+    useLocalStorage = false; // URL path explicitly set, don't use localStorage
+  } else if(currentPath.includes('/scripts')){
     initialTab = 'scripts';
     useLocalStorage = false;
-    console.log('[JinHub] URL path matched /scripts');
-  } else if(currentPath === '/executors' || currentPath.startsWith('/executors/')){
+  } else if(currentPath.includes('/executors')){
     initialTab = 'executors';
     useLocalStorage = false;
-    console.log('[JinHub] URL path matched /executors');
-  } else if(currentPath === '/premium' || currentPath.startsWith('/premium/')){
+  } else if(currentPath.includes('/premium')){
     initialTab = 'premium';
     useLocalStorage = false;
-    console.log('[JinHub] URL path matched /premium');
-  } else if(currentPath === '/getkey' || currentPath.startsWith('/getkey/')){
+  } else if(currentPath.includes('/getkey')){
     initialTab = 'getkey';
     useLocalStorage = false;
-    console.log('[JinHub] URL path matched /getkey');
-  } else {
-    // Unknown path - don't use localStorage, default to getkey
-    console.log('[JinHub] Unknown path, defaulting to getkey');
-    initialTab = 'getkey';
-    useLocalStorage = false;
+  } else if(currentPath === '/' || currentPath === ''){
+    // Root URL - allow localStorage restore
+    useLocalStorage = true;
   }
   
   // STEP 2: Check server-injected __initialTab (dari ?tab= query atau #hash)
