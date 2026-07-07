@@ -2396,24 +2396,36 @@ window.JinHubTabs = window.JinHubTabs || {}; // sudah diinit di worker.js, ini c
   const currentPath = window.location.pathname;
   console.log('[JinHub] Current URL path:', currentPath);
   
-  if(currentPath.includes('/home')){
+  // Check exact path match first (more reliable than .includes())
+  if(currentPath === '/' || currentPath === ''){
+    // Root URL - allow localStorage restore
+    initialTab = 'getkey'; // default
+    useLocalStorage = true;
+  } else if(currentPath === '/home' || currentPath.startsWith('/home/')){
     initialTab = 'home';
-    useLocalStorage = false; // URL path explicitly set, don't use localStorage
-  } else if(currentPath.includes('/scripts')){
+    useLocalStorage = false;
+    console.log('[JinHub] URL path matched /home');
+  } else if(currentPath === '/scripts' || currentPath.startsWith('/scripts/')){
     initialTab = 'scripts';
     useLocalStorage = false;
-  } else if(currentPath.includes('/executors')){
+    console.log('[JinHub] URL path matched /scripts');
+  } else if(currentPath === '/executors' || currentPath.startsWith('/executors/')){
     initialTab = 'executors';
     useLocalStorage = false;
-  } else if(currentPath.includes('/premium')){
+    console.log('[JinHub] URL path matched /executors');
+  } else if(currentPath === '/premium' || currentPath.startsWith('/premium/')){
     initialTab = 'premium';
     useLocalStorage = false;
-  } else if(currentPath.includes('/getkey')){
+    console.log('[JinHub] URL path matched /premium');
+  } else if(currentPath === '/getkey' || currentPath.startsWith('/getkey/')){
     initialTab = 'getkey';
     useLocalStorage = false;
-  } else if(currentPath === '/' || currentPath === ''){
-    // Root URL - allow localStorage restore
-    useLocalStorage = true;
+    console.log('[JinHub] URL path matched /getkey');
+  } else {
+    // Unknown path - don't use localStorage, default to getkey
+    console.log('[JinHub] Unknown path, defaulting to getkey');
+    initialTab = 'getkey';
+    useLocalStorage = false;
   }
   
   // STEP 2: Check server-injected __initialTab (dari ?tab= query atau #hash)
