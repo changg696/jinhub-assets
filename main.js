@@ -2390,6 +2390,7 @@ window.JinHubTabs = window.JinHubTabs || {}; // sudah diinit di worker.js, ini c
 
   // Tab awal saat page pertama load
   let initialTab = 'getkey'; // default fallback
+  let useLocalStorage = true; // Flag untuk tentukan apakah boleh pakai localStorage
   
   // STEP 1: Check URL path FIRST (highest priority)
   const currentPath = window.location.pathname;
@@ -2397,29 +2398,45 @@ window.JinHubTabs = window.JinHubTabs || {}; // sudah diinit di worker.js, ini c
   
   if(currentPath.includes('/home')){
     initialTab = 'home';
+    useLocalStorage = false; // URL path explicitly set, don't use localStorage
   } else if(currentPath.includes('/scripts')){
     initialTab = 'scripts';
+    useLocalStorage = false;
   } else if(currentPath.includes('/executors')){
     initialTab = 'executors';
+    useLocalStorage = false;
   } else if(currentPath.includes('/premium')){
     initialTab = 'premium';
-  } else if(currentPath.includes('/getkey') || currentPath === '/'){
+    useLocalStorage = false;
+  } else if(currentPath.includes('/getkey')){
     initialTab = 'getkey';
-  } else if(window.__initialTab && ['home','getkey','scripts','executors','premium'].includes(window.__initialTab)){
-    // STEP 2: Check server-injected __initialTab (dari ?tab= query atau #hash)
+    useLocalStorage = false;
+  } else if(currentPath === '/' || currentPath === ''){
+    // Root URL - allow localStorage restore
+    useLocalStorage = true;
+  }
+  
+  // STEP 2: Check server-injected __initialTab (dari ?tab= query atau #hash)
+  if(window.__initialTab && ['home','getkey','scripts','executors','premium'].includes(window.__initialTab)){
     initialTab = window.__initialTab;
-  } else {
-    // STEP 3: Restore dari localStorage HANYA jika URL path tidak specify tab
+    useLocalStorage = false;
+    console.log('[JinHub] Using server-injected __initialTab:', window.__initialTab);
+  }
+  
+  // STEP 3: Restore dari localStorage HANYA jika URL tidak explicitly set tab
+  if(useLocalStorage){
     try {
       const savedTab = localStorage.getItem('jinhub_last_tab');
       console.log('[JinHub] Saved tab from localStorage:', savedTab);
       if(savedTab && ['home','getkey','scripts','executors','premium'].includes(savedTab)){
         initialTab = savedTab;
-        console.log('[JinHub] Using saved tab:', savedTab);
+        console.log('[JinHub] Using saved tab from localStorage');
       }
     } catch(e){
       console.error('[JinHub] Error reading localStorage:', e);
     }
+  } else {
+    console.log('[JinHub] URL explicitly set tab, ignoring localStorage');
   }
   
   console.log('[JinHub] Final initialTab:', initialTab);
