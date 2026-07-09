@@ -801,6 +801,33 @@ window.JinHubKeySystem.init = function(slug, cfg){
     }).fire({ icon: 'info', title: 'Checking progress...' });
   }
   
+  // Toast SUCCESS untuk checkpoint completion (bottom, no backdrop)
+  function showSuccessToast(title, text){
+    if(!window.Swal) return;
+    Swal.mixin({
+      toast: true,
+      position: 'bottom', // Muncul di bawah card key
+      showConfirmButton: false,
+      timer: 3000, // 3 seconds
+      timerProgressBar: true,
+      backdrop: false, // DISABLE backdrop (no overlay hitam)
+      showClass: {
+        backdrop: 'swal2-noanimation'
+      },
+      hideClass: {
+        backdrop: 'swal2-noanimation'
+      },
+      background: '#1a1a2e',
+      color: '#ffffff',
+      customClass: {
+        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom',
+        icon: 'swal-jinhub-toast-icon',
+        title: 'swal-jinhub-toast-title',
+        container: 'swal-jinhub-toast-container'
+      }
+    }).fire({ icon: 'success', title: title });
+  }
+  
   // CEK APAKAH BARU BALIK DARI ADS (single-tab flow)
   // Logic: Kalau ada localStorage jinhub_return_url_<slug>, berarti baru balik dari redirect
   (async function checkReturnFromAds(){
@@ -844,7 +871,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 
                 // Load state lalu show success alert
                 await refreshState();
-                showAlert('success', 'All Checkpoints Completed!', 'Verification successful! You can now claim your key.');
+                showSuccessToast('All Checkpoints Completed! You can now claim your key.');
                 statusChecked = true;
                 return; // Success - exit early
                 
@@ -862,7 +889,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 render();
                 
                 await refreshState();
-                showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
+                showSuccessToast('Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!');
                 statusChecked = true;
                 return; // Success - exit early
                 
