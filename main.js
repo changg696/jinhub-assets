@@ -461,9 +461,16 @@ window.JinHubKeySystem.init = function(slug, cfg){
     try{
       const data = await apiGet('/status?token=' + encodeURIComponent(token));
       if(data.success){
-        // ALWAYS update checkpoint progress dari server (baik verified atau belum)
-        currentCheckpoint = data.checkpointCount || 0;
-        requiredCheckpoints = data.requiredCheckpoints || TOTAL_CHECKPOINTS;
+        // Update checkpoint progress dari server - PRESERVE current value if server has no data
+        // DON'T reset to 0 if server hasn't updated yet!
+        if(data.checkpointCount != null && data.checkpointCount >= 0) {
+          // Only update if server has actual data (including 0 for fresh start)
+          // But use Math.max to never go backwards during polling
+          currentCheckpoint = Math.max(currentCheckpoint, data.checkpointCount);
+        }
+        if(data.requiredCheckpoints) {
+          requiredCheckpoints = data.requiredCheckpoints;
+        }
         
         if(data.verified){
           // SEMUA checkpoint selesai - update progress ke nilai final SEBELUM render
@@ -548,8 +555,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
       // (multi-checkpoint provider kayak lootlabs/workink), JANGAN reset
       // currentCheckpoint ke 0 -- pakai checkpointCount yang server balikin
       // biar progress bar tetep nampilin ronde yang udah kelar sebelumnya.
-      currentCheckpoint = data.checkpointCount || 0;
-      requiredCheckpoints = data.requiredCheckpoints || TOTAL_CHECKPOINTS;
+      // Use Math.max to never go backwards!
+      if(data.checkpointCount != null && data.checkpointCount >= 0) {
+        currentCheckpoint = Math.max(currentCheckpoint, data.checkpointCount);
+      }
+      if(data.requiredCheckpoints) {
+        requiredCheckpoints = data.requiredCheckpoints;
+      }
       
       pendingToken = data.token;
       savePending(data.token, false, currentCheckpoint, requiredCheckpoints);
