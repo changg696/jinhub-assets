@@ -4,6 +4,7 @@ window.JinHubKeySystem = window.JinHubKeySystem || {};
 window.JinHubKeySystem.init = function(slug, cfg){
   const API = '/api/getkey/' + slug;
   const PENDING_KEY = 'jinhub_pending_' + slug; // {token, verified} -- biar kalau user refresh gak ilang
+  const KEYS_CACHE_KEY = 'jinhub_keys_cache_' + slug; // cache list keys terakhir, biar tabel gak flash kosong pas reload
   const COOLDOWN_MS = 30 * 1000; // HARUS sama kaya START_COOLDOWN_MS di src/api/getkey.js
 
   const COPY_ICON    = '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm-1 4l6 6v10c0 1.1-.9 2-2 2H7.99C6.89 23 6 22.1 6 21l.01-14c0-1.1.89-2 1.99-2zm-1 7h5.5L14 6.5z"/></svg>';
@@ -12,8 +13,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
 
   const root = document.getElementById('pkPage-' + slug);
   if(!root) return;
-  if(root.dataset.pkInited === '1'){ refreshState(); return; }
-  root.dataset.pkInited = '1';
+  if(root.dataset.pkInited === '1'){ 
+    // Re-initialization: still need to restore cache and setup state properly
+    // Don't just call refreshState() and skip everything!
+    console.log('[KeySystem] Re-initializing', slug, '- restoring cache first');
+  } else {
+    root.dataset.pkInited = '1';
+  }
 
   // Baca totalCheckpoints dari data attribute yang di-set template
   const TOTAL_CHECKPOINTS = parseInt(root.dataset.totalCheckpoints || '1', 10);
@@ -38,6 +44,23 @@ window.JinHubKeySystem.init = function(slug, cfg){
   };
 
   let state = { keys: [], activeKeys: [], expiredKeys: [], totalKeys: 0, remaining: 3, lastClaimAt: null };
+  let isRefreshingState = false; // Track when we're loading fresh data from server
+
+  // PREVENT KEY-TABLE FLICKER: pas reload/return-from-ads, jangan biarin
+  // tabel key nge-flash "No key yet" dulu sambil nunggu GET /state kelar
+  // (network + Worker/KV latency). Kalau ada cache dari load sebelumnya,
+  // pakai itu dulu buat render awal -- refreshState() bakal nimpa dengan
+  // data asli begitu selesai, cache ini cuma optimistic placeholder.
+  (function restoreKeysCache(){
+    const cached = loadKeysCache();
+    if(!cached || !cached.keys || !cached.keys.length) return;
+    state.keys = cached.keys;
+    state.totalKeys = cached.totalKeys || cached.keys.length;
+    state.remaining = cached.remaining != null ? cached.remaining : state.remaining;
+    const now = Date.now();
+    state.activeKeys = state.keys.filter(k => k.expiresAt && k.expiresAt > now).map(k => k.key);
+    state.expiredKeys = state.keys.filter(k => k.expiresAt && k.expiresAt <= now).map(k => k.key);
+  })();
   let waiting = false;             // lagi nunggu checkpoint dikonfirmasi provider
   let checkpointVerified = false;  // checkpoint UDAH dikonfirmasi tapi user BELUM milih aksi
   let pendingToken = null;
@@ -53,6 +76,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // MULTIPLE CHECKPOINTS STATE
   let currentCheckpoint = 0; // Checkpoint saat ini (0-based)
   let requiredCheckpoints = TOTAL_CHECKPOINTS; // Total checkpoint yang dibutuhkan dari server
+  let firstRender = true; // dipakai buat matiin transition CSS di render pertama
 
   function getCooldownMs(){
     if(!state.lastClaimAt) return 0;
@@ -84,11 +108,34 @@ window.JinHubKeySystem.init = function(slug, cfg){
       return raw ? JSON.parse(raw) : null;
     }catch(e){ return null; }
   }
-  function savePending(token, verified){
-    try{ localStorage.setItem(PENDING_KEY, JSON.stringify({ token: token, verified: !!verified })); }catch(e){}
+  function savePending(token, verified, checkpointCount, requiredCheckpoints){
+    try{ 
+      localStorage.setItem(PENDING_KEY, JSON.stringify({ 
+        token: token, 
+        verified: !!verified,
+        checkpointCount: checkpointCount || 0,
+        requiredCheckpoints: requiredCheckpoints || TOTAL_CHECKPOINTS
+      })); 
+    }catch(e){}
   }
   function clearPending(){
     try{ localStorage.removeItem(PENDING_KEY); }catch(e){}
+  }
+
+  // Cache list keys (hasil /state) di localStorage biar pas reload,
+  // tabel gak flash "No key yet" dulu sambil nunggu /state kelar di-fetch.
+  // Ini CUMA buat tampilan sementara -- data asli tetep dari server lewat
+  // refreshState(), cache ini langsung ketimpa begitu itu selesai.
+  function loadKeysCache(){
+    try{
+      const raw = localStorage.getItem(KEYS_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveKeysCache(keys, totalKeys, remaining){
+    try{
+      localStorage.setItem(KEYS_CACHE_KEY, JSON.stringify({ keys: keys || [], totalKeys: totalKeys || 0, remaining: remaining }));
+    }catch(e){}
   }
 
   async function apiGet(path){
@@ -176,7 +223,18 @@ window.JinHubKeySystem.init = function(slug, cfg){
     // ===== HEADER: progress + START =====
     el.progressLabel.textContent = currentCheckpoint + '/' + requiredCheckpoints;
     const progressPercent = requiredCheckpoints > 0 ? (currentCheckpoint / requiredCheckpoints) * 100 : 0;
-    el.barFill.style.width = progressPercent + '%';
+    if(firstRender){
+      // Render PERTAMA (biasanya hasil restore dari localStorage): matiin
+      // transition sesaat biar bar langsung "loncat" ke posisi yang bener,
+      // bukan nyapu dari 0% -> keliatan kayak sempet balik ke awal.
+      el.barFill.style.transition = 'none';
+      el.barFill.style.width = progressPercent + '%';
+      void el.barFill.offsetWidth; // force reflow biar transition off-nya kepake
+      el.barFill.style.transition = '';
+      firstRender = false;
+    } else {
+      el.barFill.style.width = progressPercent + '%';
+    }
     el.status.textContent = checkpointVerified ? 'DONE' : waiting ? 'WAITING' : locked ? 'LOCKED' : inCooldown ? 'COOLDOWN' : hasActiveKeys ? 'ACTIVE' : 'READY';
 
     el.startBtn.disabled = locked || waiting || starting || checkpointVerified || inCooldown;
@@ -343,10 +401,12 @@ window.JinHubKeySystem.init = function(slug, cfg){
   }
 
   async function refreshState(){
+    isRefreshingState = true;
     try{
       const data = await apiGet('/state');
       if(data.success){
-        // Update state dari server
+        // Update state dari server HANYA jika berhasil
+        // JANGAN reset state sebelum dapat response - preserve cache
         state.keys = data.keys || [];
         state.totalKeys = data.totalKeys || 0;
         state.remaining = data.remaining || 0;
@@ -357,9 +417,16 @@ window.JinHubKeySystem.init = function(slug, cfg){
         state.activeKeys = state.keys.filter(k => k.expiresAt && k.expiresAt > now).map(k => k.key);
         state.expiredKeys = state.keys.filter(k => k.expiresAt && k.expiresAt <= now).map(k => k.key);
         
+        saveKeysCache(state.keys, state.totalKeys, state.remaining);
         render();
       }
-    }catch(e){ /* diem-diem aja, biarin UI kepake data lama */ }
+      // Kalau API gagal, JANGAN ubah state sama sekali - biar pakai cache lama
+    }catch(e){ 
+      console.warn('[KeySystem] refreshState failed, keeping cached data:', e);
+      // Tetap render dengan data cache yang ada (state tidak diubah)
+    } finally {
+      isRefreshingState = false;
+    }
   }
 
   function stopPolling(){
@@ -394,7 +461,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
           waiting = false;
           checkpointVerified = true;
           pendingToken = token;
-          savePending(token, true);
+          savePending(token, true, currentCheckpoint, requiredCheckpoints);
           
           showAlert('success', 'All Checkpoints Completed!', 'All ' + requiredCheckpoints + ' checkpoints verified! You can now claim your key.');
           render();
@@ -418,8 +485,19 @@ window.JinHubKeySystem.init = function(slug, cfg){
       }
     }catch(e){ /* network glitch, coba lagi di polling berikutnya */ }
     
-    // Polling interval dinamis: 1 detik untuk 30 try pertama (30 detik), lalu 2 detik
-    const interval = pollTries <= 30 ? 1000 : 2000;
+    // Polling interval dinamis untuk responsiveness:
+    // - First 15 attempts (15 seconds): 1 second intervals untuk fast response
+    // - Next 15 attempts (15 seconds): 1.5 second intervals  
+    // - Remaining attempts: 2 second intervals
+    let interval;
+    if(pollTries <= 15) {
+      interval = 1000; // Super responsive first 15 seconds
+    } else if(pollTries <= 30) {
+      interval = 1500; // Moderate for next 15 seconds  
+    } else {
+      interval = 2000; // Standard after 30 seconds
+    }
+    
     pollTimer = window.setTimeout(function(){ pollStatus(token); }, interval);
   }
 
@@ -463,7 +541,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
       requiredCheckpoints = data.requiredCheckpoints || TOTAL_CHECKPOINTS;
       
       pendingToken = data.token;
-      savePending(data.token, false);
+      savePending(data.token, false, currentCheckpoint, requiredCheckpoints);
       
       if(data.checkpointUrl){
         // REDIRECT LANGSUNG ke checkpoint URL di tab yang sama (bukan buka tab baru)
@@ -652,6 +730,44 @@ window.JinHubKeySystem.init = function(slug, cfg){
 
   // Load pertama: sinkron state beneran dari server
   const pending = loadPending();
+
+  // PREVENT PROGRESS FLICKER: langsung pakai object 'pending' yang UDAH
+  // di-parse sama loadPending() di atas. Sebelumnya di sini ada re-read +
+  // re-parse localStorage KEDUA KALINYA -- kalau itu gagal/keselip timing,
+  // currentCheckpoint diem di nilai awal (0) dan progress kelihatan "0/X"
+  // sesaat sebelum kekoreksi belakangan. Sekarang cuma 1 sumber data.
+  if(pending && pending.token && pending.checkpointCount >= 0) {
+    currentCheckpoint = pending.checkpointCount || 0;
+    requiredCheckpoints = pending.requiredCheckpoints || TOTAL_CHECKPOINTS;
+  }
+  // Render SEKALI di awal pakai apapun yang udah kita tau (cache keys +
+  // pending checkpoint kalau ada) -- SEBELUM ada network call apapun.
+  // Ini yang bikin tabel key & progress bar gak sempet nge-flash kosong/0
+  // pas halaman baru kebuka/reload.
+  render();
+
+  // Toast KECIL non-blocking buat status "lagi ngecek checkpoint" -- ini
+  // BUKAN showAlert() yang bikin popup di tengah layar. Popup di tengah
+  // yang nutupin 2.5 detik itu yang bikin progress bar di baliknya
+  // (yang sebenernya udah bener duluan) berasa "telat muncul".
+  function showCheckingToast(){
+    if(!window.Swal) return;
+    Swal.mixin({
+      toast: true,
+      position: 'top',
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true,
+      backdrop: false,
+      background: '#1a1a2e',
+      color: '#ffffff',
+      customClass: {
+        popup: 'swal-jinhub-toast',
+        icon: 'swal-jinhub-toast-icon',
+        title: 'swal-jinhub-toast-title'
+      }
+    }).fire({ icon: 'info', title: 'Checking progress...' });
+  }
   
   // CEK APAKAH BARU BALIK DARI ADS (single-tab flow)
   // Logic: Kalau ada localStorage jinhub_return_url_<slug>, berarti baru balik dari redirect
@@ -662,55 +778,98 @@ window.JinHubKeySystem.init = function(slug, cfg){
       const hadReturnUrl = !!localStorage.getItem(returnUrlKey);
       
       if (hadReturnUrl) {
+        console.log('[KeySystem] Detected return from ads - fast-track status check');
+        
         // User baru balik dari ads redirect - cleanup localStorage
         localStorage.removeItem(returnUrlKey);
         
-        // Kalau ada pending token, cek status langsung
+        // IMMEDIATE UI FEEDBACK - toast kecil non-blocking (bukan popup
+        // center) biar gak nutupin progress bar yang udah ke-restore bener
+        // dari localStorage di baris atas tadi.
+        showCheckingToast();
+        
+        // Kalau ada pending token, cek status langsung DENGAN PRIORITAS TINGGI
         if (pending && pending.token) {
-          try {
-            const statusData = await apiGet('/status?token=' + encodeURIComponent(pending.token));
-            if (statusData.success && statusData.verified) {
-              pendingToken = pending.token;
-              checkpointVerified = true;
-              currentCheckpoint = statusData.checkpointCount || requiredCheckpoints;
-              requiredCheckpoints = statusData.requiredCheckpoints || requiredCheckpoints;
-              savePending(pending.token, true);
+          // MULTIPLE RAPID CHECKS (3x dengan delay pendek) untuk responsiveness
+          let statusChecked = false;
+          
+          for(let attempt = 1; attempt <= 3 && !statusChecked; attempt++) {
+            try {
+              console.log('[KeySystem] Status check attempt', attempt);
+              const statusData = await apiGet('/status?token=' + encodeURIComponent(pending.token));
               
-              // Load state dulu baru show alert
-              await refreshState();
-              showAlert('success', 'Checkpoint Completed!', 'Verification successful! You can now claim your key.');
-              render();
-              return; // Skip refreshState di bawah karena udah dipanggil
-            } else if (statusData.success && (statusData.checkpointCount || 0) > 0) {
-              // PENTING: checkpoint PARSIAL (misal 1/2 buat lootlabs) BUKAN
-              // sesi invalid -- token-nya masih hidup di server dan JANGAN
-              // di-clear. Simpen progress-nya biar progress bar kebaca
-              // bener, dan biarin pendingToken tetep tersimpan supaya START
-              // berikutnya nge-lanjutin sesi yang SAMA (lihat handleStart di
-              // src/api/getkey.js yang sekarang reuse sesi pending).
-              pendingToken = pending.token;
-              currentCheckpoint = statusData.checkpointCount;
-              requiredCheckpoints = statusData.requiredCheckpoints || requiredCheckpoints;
-              checkpointVerified = false;
-              savePending(pending.token, false);
+              if (statusData.success && statusData.verified) {
+                console.log('[KeySystem] ✓ VERIFIED - All checkpoints completed!');
+                pendingToken = pending.token;
+                checkpointVerified = true;
+                currentCheckpoint = statusData.checkpointCount || requiredCheckpoints;
+                requiredCheckpoints = statusData.requiredCheckpoints || requiredCheckpoints;
+                savePending(pending.token, true, currentCheckpoint, requiredCheckpoints);
+                
+                // INSTANT UI UPDATE before state refresh
+                render();
+                
+                // Load state lalu show success alert
+                await refreshState();
+                showAlert('success', 'All Checkpoints Completed!', 'Verification successful! You can now claim your key.');
+                statusChecked = true;
+                return; // Success - exit early
+                
+              } else if (statusData.success && (statusData.checkpointCount || 0) > 0) {
+                console.log('[KeySystem] ✓ PARTIAL - Checkpoint', statusData.checkpointCount, '/', statusData.requiredCheckpoints, 'completed');
+                // INSTANT progress update to prevent flicker
+                pendingToken = pending.token;
+                currentCheckpoint = statusData.checkpointCount;
+                requiredCheckpoints = statusData.requiredCheckpoints || requiredCheckpoints;
+                checkpointVerified = false;
+                savePending(pending.token, false, currentCheckpoint, requiredCheckpoints);
 
-              await refreshState();
-              showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
-              render();
-              return; // Skip refreshState di bawah karena udah dipanggil
-            } else if (statusData.code === 'EXPIRED' || !statusData.success) {
-              // Beneran invalid/hangus (session udah gak ada di KV) -> baru
-              // aman buat di-clear.
-              clearPending();
+                // IMMEDIATE render to show correct progress
+                render();
+                
+                await refreshState();
+                showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
+                statusChecked = true;
+                return; // Success - exit early
+                
+              } else if (statusData.code === 'EXPIRED' || !statusData.success) {
+                console.log('[KeySystem] ✗ Session expired/invalid');
+                clearPending();
+                showAlert('warning', 'Session Expired', 'Your checkpoint session has expired. Please press START again.');
+                statusChecked = true;
+                break; // Invalid session - stop trying
+              }
+              
+              // If not verified yet and this is not the last attempt, wait briefly before retry
+              if(attempt < 3) {
+                await new Promise(resolve => setTimeout(resolve, 500)); // 500ms between attempts
+              }
+              
+            } catch(e) {
+              console.warn('[KeySystem] Status check attempt', attempt, 'failed:', e);
+              // Try again after short delay (unless last attempt)
+              if(attempt < 3) {
+                await new Promise(resolve => setTimeout(resolve, 800)); // Longer delay on error
+              }
             }
-          } catch(e) {}
+          }
+          
+          // If all attempts failed to get verified status, fall back to normal flow
+          if(!statusChecked) {
+            console.warn('[KeySystem] All status check attempts failed - falling back to normal polling');
+            // Don't show error - just fall through to normal refresh
+          }
         }
       }
-    } catch(e) {}
+    } catch(e) {
+      console.error('[KeySystem] Return from ads detection failed:', e);
+    }
     
-    // Normal flow: refresh state
-    refreshState().then(async function(){
-      if(!pending || !pending.token) return;
+    // Normal flow: refresh state dengan small delay biar UI cache sempat terlihat
+    // Delay 300ms cukup untuk user lihat keys yang cached tanpa flicker
+    setTimeout(() => {
+      refreshState().then(async function(){
+        if(!pending || !pending.token) return;
       
       // Cek apakah checkpoint lama masih relevan
       if(state.totalKeys >= 3){
@@ -743,6 +902,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
         // cuma gara-gara request status gagal sesaat.
       }
     });
+  }, 300); // 300ms delay to let cached UI show first
   })();
 };
 
