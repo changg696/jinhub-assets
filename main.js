@@ -743,13 +743,17 @@ window.JinHubKeySystem.init = function(slug, cfg){
   const pending = loadPending();
 
   // PREVENT PROGRESS FLICKER: langsung pakai object 'pending' yang UDAH
-  // di-parse sama loadPending() di atas. Sebelumnya di sini ada re-read +
-  // re-parse localStorage KEDUA KALINYA -- kalau itu gagal/keselip timing,
-  // currentCheckpoint diem di nilai awal (0) dan progress kelihatan "0/X"
-  // sesaat sebelum kekoreksi belakangan. Sekarang cuma 1 sumber data.
-  if(pending && pending.token && pending.checkpointCount >= 0) {
-    currentCheckpoint = pending.checkpointCount || 0;
-    requiredCheckpoints = pending.requiredCheckpoints || TOTAL_CHECKPOINTS;
+  // di-parse sama loadPending() di atas. 
+  // CRITICAL: Only restore pending if it has ACTUAL progress (> 0)
+  // Don't overwrite with 0 from stale localStorage!
+  if(pending && pending.token) {
+    if(pending.checkpointCount && pending.checkpointCount > 0) {
+      currentCheckpoint = pending.checkpointCount;
+      console.log('[KeySystem] Restored checkpoint from localStorage:', currentCheckpoint);
+    }
+    if(pending.requiredCheckpoints) {
+      requiredCheckpoints = pending.requiredCheckpoints;
+    }
   }
   // Render SEKALI di awal pakai apapun yang udah kita tau (cache keys +
   // pending checkpoint kalau ada) -- SEBELUM ada network call apapun.
