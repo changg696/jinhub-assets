@@ -214,6 +214,70 @@ window.JinHubKeySystem.init = function(slug, cfg){
     });
   }
 
+  // Nama tampilan provider buat dipakein di modal verifikasi (fallback ke
+  // slug ter-kapital kalau providernya baru/belum ke-daftar di sini).
+  const PROVIDER_DISPLAY_NAMES = { lootlabs: 'LootLabs', linkvertise: 'Linkvertise', workink: 'Workink' };
+  const providerDisplayName = PROVIDER_DISPLAY_NAMES[slug] || (slug.charAt(0).toUpperCase() + slug.slice(1));
+
+  // MODAL "Verification in progress" -- centered, modern, dipakein pas kita
+  // lagi ngecek status checkpoint ke server (baik pas user baru balik dari
+  // ads/redirect maupun pas polling biasa nunggu callback). Ganti toast kecil
+  // yang lama sama popup tengah yang lebih jelas & gak gampang keskip mata.
+  function showVerifyingModal(checkpointNum, totalCheckpoints){
+    if(!window.Swal) return;
+    const safeTotal = totalCheckpoints || 1;
+    const safeCheckpoint = Math.max(1, Math.min(checkpointNum || 1, safeTotal));
+    Swal.fire({
+      html: '' +
+        '<div class="pk-verify-modal">' +
+          '<button type="button" class="pk-verify-close" data-pk-verify-cancel aria-label="Cancel">&times;</button>' +
+          '<h3 class="pk-verify-title">Verification in progress</h3>' +
+          '<p class="pk-verify-sub">Keep this tab open. The key flow will finish here.</p>' +
+          '<div class="pk-verify-checkpoint">CHECKPOINT ' + safeCheckpoint + ' / ' + safeTotal + '</div>' +
+          '<div class="pk-verify-spinner" aria-hidden="true"></div>' +
+          '<div class="pk-verify-status">Verifying tasks&hellip;</div>' +
+          '<p class="pk-verify-desc">Waiting for ' + providerDisplayName + ' to confirm your completed tasks. This takes a few seconds.</p>' +
+          '<button type="button" class="pk-verify-cancel" data-pk-verify-cancel>Cancel</button>' +
+        '</div>',
+      showConfirmButton: false,
+      showCloseButton: false,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      background: '#14171f',
+      color: '#ffffff',
+      width: 440,
+      customClass: { popup: 'swal-jinhub-popup swal-jinhub-verify-popup' },
+      didOpen: (popup) => {
+        popup.style.animation = 'swal-show 0.3s ease-out';
+        popup.querySelectorAll('[data-pk-verify-cancel]').forEach(function(btn){
+          btn.addEventListener('click', function(){ Swal.close(); });
+        });
+      },
+      willClose: () => {
+        const popup = Swal.getPopup();
+        if(popup) popup.style.animation = 'swal-hide 0.2s ease-in';
+      }
+    });
+  }
+
+  // Update angka checkpoint di modal verifikasi yang lagi kebuka (kalau ada),
+  // tanpa nge-restart animasi/popup-nya.
+  function updateVerifyingModal(checkpointNum, totalCheckpoints){
+    if(!window.Swal || !Swal.isVisible()) return;
+    const popup = Swal.getPopup();
+    if(!popup) return;
+    const label = popup.querySelector('.pk-verify-checkpoint');
+    if(label){
+      const safeTotal = totalCheckpoints || 1;
+      const safeCheckpoint = Math.max(1, Math.min(checkpointNum || 1, safeTotal));
+      label.textContent = 'CHECKPOINT ' + safeCheckpoint + ' / ' + safeTotal;
+    }
+  }
+
+  function closeVerifyingModal(){
+    if(window.Swal && Swal.isVisible()) Swal.close();
+  }
+
   function render(){
     // CRITICAL FIX: Always use the MAXIMUM checkpoint we've seen so far
     // Load from cache and compare with current value to prevent backward progress
@@ -801,9 +865,10 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // pas halaman baru kebuka/reload.
   render();
 
-  // Toast "Checking progress..." udah DIHAPUS sesuai request -- gak ada
-  // notif apapun lagi pas user baru balik dari ads, langsung diem-diem
-  // ngecek status di background.
+  // Pas user baru balik dari ads, kita nampilin modal "Verification in
+  // progress" di tengah layar (bukan toast kecil di pojok kayak sebelumnya)
+  // sambil diem-diem ngecek status ke server di background -- lihat
+  // showVerifyingModal() di atas.
   
   // CEK APAKAH BARU BALIK DARI ADS (single-tab flow)
   // Logic: Kalau ada localStorage jinhub_return_url_<slug>, berarti baru balik dari redirect
@@ -820,11 +885,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
         // User baru balik dari ads redirect - cleanup localStorage
         localStorage.removeItem(returnUrlKey);
         
-        // Notif "Checking progress..." udah dihapus -- diem-diem aja
-        // ngecek status di background tanpa nampilin apa-apa ke user.
-        
         // Kalau ada pending token, cek status langsung DENGAN PRIORITAS TINGGI
         if (pending && pending.token) {
+          // Tampilin modal verifikasi di tengah layar selagi kita ngecek
+          // status ke server -- ini yang muncul instead of toast lama.
+          const modalCheckpointNum = Math.min((pending.checkpointCount || 0) + 1, requiredCheckpoints || TOTAL_CHECKPOINTS);
+          showVerifyingModal(modalCheckpointNum, requiredCheckpoints || TOTAL_CHECKPOINTS);
+
           // MULTIPLE RAPID CHECKS (3x dengan delay pendek) untuk responsiveness
           let statusChecked = false;
           
@@ -846,6 +913,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 
                 // Load state lalu show success alert
                 await refreshState();
+                closeVerifyingModal();
                 showAlert('success', 'All Checkpoints Completed!', 'Verification successful! You can now claim your key.');
                 statusChecked = true;
                 handledReturnFromAds = true; // Mark as handled to skip normal flow
@@ -864,6 +932,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 render();
                 
                 await refreshState();
+                closeVerifyingModal();
                 showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
                 statusChecked = true;
                 handledReturnFromAds = true; // Mark as handled to skip normal flow
@@ -872,6 +941,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
               } else if (statusData.code === 'EXPIRED' || !statusData.success) {
                 console.log('[KeySystem] ✗ Session expired/invalid');
                 clearPending();
+                closeVerifyingModal();
                 showAlert('warning', 'Session Expired', 'Your checkpoint session has expired. Please press START again.');
                 statusChecked = true;
                 break; // Invalid session - stop trying
@@ -895,11 +965,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
           if(!statusChecked) {
             console.warn('[KeySystem] All status check attempts failed - falling back to normal polling');
             // Don't show error - just fall through to normal refresh
+            closeVerifyingModal();
           }
         }
       }
     } catch(e) {
       console.error('[KeySystem] Return from ads detection failed:', e);
+      closeVerifyingModal();
     }
     
     // Normal flow: refresh state dengan small delay biar UI cache sempat terlihat
