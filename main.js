@@ -178,22 +178,25 @@ window.JinHubKeySystem.init = function(slug, cfg){
       timerProgressBar: false, // MATIKAN progress bar biar clean
       background: '#1a1a2e',
       color: '#ffffff',
-      toast: false, // Popup centered (bukan toast di pojok)
-      position: 'center',
+      toast: true, // TOAST MODE - muncul di pojok bawah seperti copy notification
+      position: 'bottom', // BOTTOM position (bukan center)
+      backdrop: false, // DISABLE backdrop - NO black overlay
+      showClass: {
+        backdrop: 'swal2-noanimation' // No animation untuk backdrop
+      },
+      hideClass: {
+        backdrop: 'swal2-noanimation'
+      },
       customClass: {
-        popup: 'swal-jinhub-popup',
-        icon: 'swal-jinhub-icon',
-        title: 'swal-jinhub-title',
-        htmlContainer: 'swal-jinhub-text'
+        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom',
+        icon: 'swal-jinhub-toast-icon',
+        title: 'swal-jinhub-toast-title',
+        htmlContainer: 'swal-jinhub-toast-text',
+        container: 'swal-jinhub-toast-container'
       },
-      didOpen: (popup) => {
-        // Tambahkan animasi smooth
-        popup.style.animation = 'swal-show 0.3s ease-out';
-      },
-      willClose: () => {
-        // Animasi saat close
-        const popup = Swal.getPopup();
-        if(popup) popup.style.animation = 'swal-hide 0.2s ease-in';
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
       }
     });
   }
@@ -779,53 +782,19 @@ window.JinHubKeySystem.init = function(slug, cfg){
     if(!window.Swal) return;
     Swal.mixin({
       toast: true,
-      position: 'bottom', // Muncul di bawah card key (sama kayak notif copy key)
+      position: 'top',
       showConfirmButton: false,
       timer: 4000,
       timerProgressBar: true,
-      backdrop: false, // DISABLE backdrop (no overlay hitam)
-      showClass: {
-        backdrop: 'swal2-noanimation' // No animation untuk backdrop
-      },
-      hideClass: {
-        backdrop: 'swal2-noanimation'
-      },
+      backdrop: false,
       background: '#1a1a2e',
       color: '#ffffff',
       customClass: {
-        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom',
+        popup: 'swal-jinhub-toast',
         icon: 'swal-jinhub-toast-icon',
-        title: 'swal-jinhub-toast-title',
-        container: 'swal-jinhub-toast-container' // Custom container class
+        title: 'swal-jinhub-toast-title'
       }
     }).fire({ icon: 'info', title: 'Checking progress...' });
-  }
-  
-  // Toast SUCCESS untuk checkpoint completion (bottom, no backdrop)
-  function showSuccessToast(title, text){
-    if(!window.Swal) return;
-    Swal.mixin({
-      toast: true,
-      position: 'bottom', // Muncul di bawah card key
-      showConfirmButton: false,
-      timer: 3000, // 3 seconds
-      timerProgressBar: true,
-      backdrop: false, // DISABLE backdrop (no overlay hitam)
-      showClass: {
-        backdrop: 'swal2-noanimation'
-      },
-      hideClass: {
-        backdrop: 'swal2-noanimation'
-      },
-      background: '#1a1a2e',
-      color: '#ffffff',
-      customClass: {
-        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom',
-        icon: 'swal-jinhub-toast-icon',
-        title: 'swal-jinhub-toast-title',
-        container: 'swal-jinhub-toast-container'
-      }
-    }).fire({ icon: 'success', title: title });
   }
   
   // CEK APAKAH BARU BALIK DARI ADS (single-tab flow)
@@ -871,7 +840,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 
                 // Load state lalu show success alert
                 await refreshState();
-                showSuccessToast('All Checkpoints Completed! You can now claim your key.');
+                showAlert('success', 'All Checkpoints Completed!', 'Verification successful! You can now claim your key.');
                 statusChecked = true;
                 return; // Success - exit early
                 
@@ -889,7 +858,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 render();
                 
                 await refreshState();
-                showSuccessToast('Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!');
+                showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
                 statusChecked = true;
                 return; // Success - exit early
                 
