@@ -731,6 +731,12 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // Load pertama: sinkron state beneran dari server
   const pending = loadPending();
 
+  // ===== CRITICAL FIX: CHECK RETURN FROM ADS SYNCHRONOUSLY BEFORE INITIAL RENDER =====
+  // Kalau user baru balik dari ads, JANGAN render dengan cached checkpointCount lama (0)
+  // Kita perlu preserve OLD checkpoint count sampai API update nya datang
+  const returnUrlKey = 'jinhub_return_url_' + slug;
+  const isReturningFromAds = !!localStorage.getItem(returnUrlKey);
+  
   // PREVENT PROGRESS FLICKER: langsung pakai object 'pending' yang UDAH
   // di-parse sama loadPending() di atas. Sebelumnya di sini ada re-read +
   // re-parse localStorage KEDUA KALINYA -- kalau itu gagal/keselip timing,
@@ -740,6 +746,25 @@ window.JinHubKeySystem.init = function(slug, cfg){
     currentCheckpoint = pending.checkpointCount || 0;
     requiredCheckpoints = pending.requiredCheckpoints || TOTAL_CHECKPOINTS;
   }
+  
+  // CRITICAL: Kalau returning from ads, DON'T show old cached progress (0/2)
+  // Keep the LAST KNOWN checkpoint count from pending to prevent flicker
+  // The API call will update it in ~500ms with real server data
+  if(isReturningFromAds && pending && pending.checkpointCount !== undefined) {
+    // Preserve last known checkpoint to prevent 1/2 -> 0/2 -> 2/2 jump
+    console.log('[KeySystem] Returning from ads - preserving checkpoint:', pending.checkpointCount);
+    currentCheckpoint = pending.checkpointCount; // Keep last value, don't reset to 0
+  }
+  
+  // CRITICAL: Kalau returning from ads, mark as WAITING state
+  // DON'T show stale checkpoint count from localStorage (might be outdated)
+  // API call will update with fresh server data in ~100-500ms
+  if(isReturningFromAds && pending && pending.token) {
+    // Set waiting = true to prevent showing stale progress during API check
+    waiting = true;
+    console.log('[KeySystem] Returning from ads - setting WAITING state until API confirms progress');
+  }
+  
   // Render SEKALI di awal pakai apapun yang udah kita tau (cache keys +
   // pending checkpoint kalau ada) -- SEBELUM ada network call apapun.
   // Ini yang bikin tabel key & progress bar gak sempet nge-flash kosong/0
@@ -800,6 +825,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
               
               if (statusData.success && statusData.verified) {
                 console.log('[KeySystem] ✓ VERIFIED - All checkpoints completed!');
+                waiting = false; // Clear waiting state
                 pendingToken = pending.token;
                 checkpointVerified = true;
                 currentCheckpoint = statusData.checkpointCount || requiredCheckpoints;
@@ -818,6 +844,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
               } else if (statusData.success && (statusData.checkpointCount || 0) > 0) {
                 console.log('[KeySystem] ✓ PARTIAL - Checkpoint', statusData.checkpointCount, '/', statusData.requiredCheckpoints, 'completed');
                 // INSTANT progress update to prevent flicker
+                waiting = false; // Clear waiting state
                 pendingToken = pending.token;
                 currentCheckpoint = statusData.checkpointCount;
                 requiredCheckpoints = statusData.requiredCheckpoints || requiredCheckpoints;
@@ -834,6 +861,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 
               } else if (statusData.code === 'EXPIRED' || !statusData.success) {
                 console.log('[KeySystem] ✗ Session expired/invalid');
+                waiting = false; // Clear waiting state
                 clearPending();
                 showAlert('warning', 'Session Expired', 'Your checkpoint session has expired. Please press START again.');
                 statusChecked = true;
@@ -856,6 +884,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
           
           // If all attempts failed to get verified status, fall back to normal flow
           if(!statusChecked) {
+            waiting = false; // Clear waiting state even on failure
             console.warn('[KeySystem] All status check attempts failed - falling back to normal polling');
             // Don't show error - just fall through to normal refresh
           }
