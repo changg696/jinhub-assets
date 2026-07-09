@@ -746,17 +746,12 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // currentCheckpoint diem di nilai awal (0) dan progress kelihatan "0/X"
   // sesaat sebelum kekoreksi belakangan. Sekarang cuma 1 sumber data.
   if(pending && pending.token && pending.checkpointCount >= 0) {
-    currentCheckpoint = pending.checkpointCount || 0;
-    requiredCheckpoints = pending.requiredCheckpoints || TOTAL_CHECKPOINTS;
-  }
-  
-  // CRITICAL: Kalau returning from ads, DON'T show old cached progress (0/2)
-  // Keep the LAST KNOWN checkpoint count from pending to prevent flicker
-  // The API call will update it in ~500ms with real server data
-  if(isReturningFromAds && pending && pending.checkpointCount !== undefined) {
-    // Preserve last known checkpoint to prevent 1/2 -> 0/2 -> 2/2 jump
-    console.log('[KeySystem] Returning from ads - preserving checkpoint:', pending.checkpointCount);
-    currentCheckpoint = pending.checkpointCount; // Keep last value, don't reset to 0
+    // ONLY restore checkpoint count if NOT returning from ads
+    // If returning from ads, checkpoint count in localStorage is STALE
+    if(!isReturningFromAds) {
+      currentCheckpoint = pending.checkpointCount || 0;
+      requiredCheckpoints = pending.requiredCheckpoints || TOTAL_CHECKPOINTS;
+    }
   }
   
   // CRITICAL: Kalau returning from ads, mark as WAITING state
