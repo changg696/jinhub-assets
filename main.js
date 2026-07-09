@@ -146,8 +146,10 @@ window.JinHubKeySystem.init = function(slug, cfg){
     // Detect dev mode from current URL and append to path
     const urlParams = new URLSearchParams(window.location.search);
     const isDev = urlParams.get('dev') === '1';
+    console.log('[DEV] URL params:', window.location.search, 'isDev:', isDev);
     const separator = path.includes('?') ? '&' : '?';
     const finalPath = isDev ? path + separator + 'dev=1' : path;
+    console.log('[DEV] Final API path:', finalPath);
     
     const res = await fetch(API + finalPath, {
       method: 'POST',
@@ -562,6 +564,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
       
       // DEV MODE: Auto-complete checkpoint tanpa redirect ke ads
       if(data.isDev){
+        console.log('[DEV] Dev mode detected! Auto-completing...');
         showAlert('info', 'DEV MODE', 'Auto-completing checkpoint in 2 seconds...');
         setTimeout(async () => {
           try {
