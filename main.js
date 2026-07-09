@@ -1,4 +1,3 @@
-
 window.JinHubKeySystem = window.JinHubKeySystem || {};
 
 window.JinHubKeySystem.init = function(slug, cfg){
@@ -808,6 +807,12 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // (yang sebenernya udah bener duluan) berasa "telat muncul".
   function showCheckingToast(){
     if(!window.Swal) return;
+    // FIX: tutup paksa popup/toast SweetAlert2 lain yang mungkin masih
+    // kebuka/lagi transisi (misal showAlert() sisa render sebelumnya).
+    // Kalau nggak, container lama bisa "ketuker" sama toast baru ini dan
+    // bikin dia numpang class/posisi yang salah (nongol di atas + ada
+    // backdrop hitam, alih-alih toast kecil di bawah).
+    try{ Swal.close(); }catch(e){}
     Swal.mixin({
       toast: true,
       position: 'bottom', // Muncul di bawah card key (SAMA seperti copy key notification)
@@ -824,6 +829,16 @@ window.JinHubKeySystem.init = function(slug, cfg){
       didOpen: (toast) => {
         toast.onmouseenter = Swal.stopTimer;
         toast.onmouseleave = Swal.resumeTimer;
+        // FIX: jaring pengaman -- paksa container-nya transparan & nempel
+        // di bawah-tengah lewat inline style langsung, jaga-jaga kalau CSS
+        // class posisi dari SweetAlert2 telat/gak sempet ke-apply.
+        const container = toast.closest('.swal2-container');
+        if(container){
+          container.style.setProperty('background', 'transparent', 'important');
+          container.style.setProperty('backdrop-filter', 'none', 'important');
+          container.style.setProperty('align-items', 'flex-end', 'important');
+          container.style.setProperty('justify-content', 'center', 'important');
+        }
       },
       background: '#1a1a2e',
       color: '#ffffff',
