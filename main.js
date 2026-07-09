@@ -402,6 +402,11 @@ window.JinHubKeySystem.init = function(slug, cfg){
 
   async function refreshState(){
     isRefreshingState = true;
+    // PRESERVE checkpoint progress before refresh (don't let it reset!)
+    const preservedCheckpoint = currentCheckpoint;
+    const preservedRequired = requiredCheckpoints;
+    const preservedVerified = checkpointVerified;
+    
     try{
       const data = await apiGet('/state');
       if(data.success){
@@ -418,6 +423,12 @@ window.JinHubKeySystem.init = function(slug, cfg){
         state.expiredKeys = state.keys.filter(k => k.expiresAt && k.expiresAt <= now).map(k => k.key);
         
         saveKeysCache(state.keys, state.totalKeys, state.remaining);
+        
+        // RESTORE checkpoint state before render (prevent reset!)
+        currentCheckpoint = preservedCheckpoint;
+        requiredCheckpoints = preservedRequired;
+        checkpointVerified = preservedVerified;
+        
         render();
       }
       // Kalau API gagal, JANGAN ubah state sama sekali - biar pakai cache lama
