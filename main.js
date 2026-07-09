@@ -1,3 +1,4 @@
+
 window.JinHubKeySystem = window.JinHubKeySystem || {};
 
 window.JinHubKeySystem.init = function(slug, cfg){
@@ -279,14 +280,20 @@ window.JinHubKeySystem.init = function(slug, cfg){
   }
 
   function render(){
-    // CRITICAL FIX: Always use the MAXIMUM checkpoint we've seen so far
-    // Load from cache and compare with current value to prevent backward progress
+    // CRITICAL FIX: Check cache to prevent BACKWARD progress (flicker from 2→0)
+    // But ALWAYS save current progress so we can move forward!
     const cachedProgress = loadCheckpointProgress();
+    
+    // Only restore from cache if currentCheckpoint would GO BACKWARDS
+    // (e.g., currentCheckpoint=0 but cache=2, restore to 2)
+    // But if currentCheckpoint is HIGHER or EQUAL, use current value!
     if(cachedProgress && cachedProgress.checkpoint > currentCheckpoint) {
-      console.log('[KeySystem] Using cached checkpoint to prevent flicker:', cachedProgress.checkpoint, 'instead of', currentCheckpoint);
-      currentCheckpoint = cachedProgress.checkpoint; // Restore higher value
+      console.log('[KeySystem] Restoring checkpoint from cache to prevent backward:', cachedProgress.checkpoint, 'instead of', currentCheckpoint);
+      currentCheckpoint = cachedProgress.checkpoint;
     }
-    // Always save current progress (in case it's higher than cache)
+    
+    // ALWAYS save current checkpoint (even if same or higher)
+    // This ensures forward progress is persisted
     saveCheckpointProgress(currentCheckpoint, requiredCheckpoints);
     
     const hasActiveKeys = state.activeKeys && state.activeKeys.length > 0;
@@ -552,12 +559,10 @@ window.JinHubKeySystem.init = function(slug, cfg){
     try{
       const data = await apiGet('/status?token=' + encodeURIComponent(token));
       if(data.success){
-        // Update checkpoint progress dari server - PRESERVE current value if server has no data
-        // DON'T reset to 0 if server hasn't updated yet!
+        // ALWAYS trust server data for checkpoint progress
+        // Server knows the truth - update directly!
         if(data.checkpointCount != null && data.checkpointCount >= 0) {
-          // Only update if server has actual data (including 0 for fresh start)
-          // But use Math.max to never go backwards during polling
-          currentCheckpoint = Math.max(currentCheckpoint, data.checkpointCount);
+          currentCheckpoint = data.checkpointCount; // Direct assignment from server
         }
         if(data.requiredCheckpoints) {
           requiredCheckpoints = data.requiredCheckpoints;
@@ -644,12 +649,10 @@ window.JinHubKeySystem.init = function(slug, cfg){
       }
       
       // PENTING: kalau server nge-resume sesi checkpoint yang masih pending
-      // (multi-checkpoint provider kayak lootlabs/workink), JANGAN reset
-      // currentCheckpoint ke 0 -- pakai checkpointCount yang server balikin
-      // biar progress bar tetep nampilin ronde yang udah kelar sebelumnya.
-      // Use Math.max to never go backwards!
+      // (multi-checkpoint provider kayak lootlabs/workink), trust server data!
+      // Server knows the actual progress - update directly
       if(data.checkpointCount != null && data.checkpointCount >= 0) {
-        currentCheckpoint = Math.max(currentCheckpoint, data.checkpointCount);
+        currentCheckpoint = data.checkpointCount; // Direct from server
       }
       if(data.requiredCheckpoints) {
         requiredCheckpoints = data.requiredCheckpoints;
