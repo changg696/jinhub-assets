@@ -765,7 +765,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
     if(!window.Swal) return;
     Swal.mixin({
       toast: true,
-      position: 'top',
+      position: 'bottom', // Muncul di bawah kayak notif copy key
       showConfirmButton: false,
       timer: 4000,
       timerProgressBar: true,
@@ -773,9 +773,10 @@ window.JinHubKeySystem.init = function(slug, cfg){
       background: '#1a1a2e',
       color: '#ffffff',
       customClass: {
-        popup: 'swal-jinhub-toast',
+        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom', // Sama kayak copy key toast
         icon: 'swal-jinhub-toast-icon',
-        title: 'swal-jinhub-toast-title'
+        title: 'swal-jinhub-toast-title',
+        container: 'swal-jinhub-toast-container' // Custom container class
       }
     }).fire({ icon: 'info', title: 'Checking progress...' });
   }
