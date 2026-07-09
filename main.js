@@ -138,6 +138,23 @@ window.JinHubKeySystem.init = function(slug, cfg){
     }catch(e){}
   }
 
+  // CHECKPOINT PROGRESS CACHE - prevents backward progress flicker
+  const CHECKPOINT_PROGRESS_KEY = 'jinhub_checkpoint_progress_' + slug;
+  function loadCheckpointProgress(){
+    try{
+      const raw = localStorage.getItem(CHECKPOINT_PROGRESS_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveCheckpointProgress(checkpoint, required){
+    try{
+      localStorage.setItem(CHECKPOINT_PROGRESS_KEY, JSON.stringify({ checkpoint: checkpoint, required: required, timestamp: Date.now() }));
+    }catch(e){}
+  }
+  function clearCheckpointProgress(){
+    try{ localStorage.removeItem(CHECKPOINT_PROGRESS_KEY); }catch(e){}
+  }
+
   async function apiGet(path){
     const res = await fetch(API + path, { credentials: 'same-origin' });
     return res.json();
@@ -199,6 +216,16 @@ window.JinHubKeySystem.init = function(slug, cfg){
   }
 
   function render(){
+    // CRITICAL FIX: Always use the MAXIMUM checkpoint we've seen so far
+    // Load from cache and compare with current value to prevent backward progress
+    const cachedProgress = loadCheckpointProgress();
+    if(cachedProgress && cachedProgress.checkpoint > currentCheckpoint) {
+      console.log('[KeySystem] Using cached checkpoint to prevent flicker:', cachedProgress.checkpoint, 'instead of', currentCheckpoint);
+      currentCheckpoint = cachedProgress.checkpoint; // Restore higher value
+    }
+    // Always save current progress (in case it's higher than cache)
+    saveCheckpointProgress(currentCheckpoint, requiredCheckpoints);
+    
     const hasActiveKeys = state.activeKeys && state.activeKeys.length > 0;
     const hasExpiredKeys = state.expiredKeys && state.expiredKeys.length > 0;
     const hasAnyKey = state.keys && state.keys.length > 0;
@@ -452,6 +479,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
       waiting = false;
       pendingToken = null;
       clearPending();
+      clearCheckpointProgress(); // Clear cached progress on timeout
       currentCheckpoint = 0;
       showAlert('warning', 'Checkpoint Timeout', 'Checkpoint verification timed out. Please press START again.');
       showNote('Checkpoint belum kekonfirmasi. Coba tekan START lagi.');
@@ -495,6 +523,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
         checkpointVerified = false;
         pendingToken = null;
         clearPending();
+        clearCheckpointProgress(); // Clear cached progress on expiry
         currentCheckpoint = 0;
         showAlert('error', 'Session Expired', 'Your checkpoint session has expired. Please press START again.');
         showNote('Sesi checkpoint expired. Tekan START lagi.');
