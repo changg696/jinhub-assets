@@ -178,25 +178,22 @@ window.JinHubKeySystem.init = function(slug, cfg){
       timerProgressBar: false, // MATIKAN progress bar biar clean
       background: '#1a1a2e',
       color: '#ffffff',
-      toast: true, // TOAST MODE - muncul di pojok bawah seperti copy notification
-      position: 'bottom', // BOTTOM position (bukan center)
-      backdrop: false, // DISABLE backdrop - NO black overlay
-      showClass: {
-        backdrop: 'swal2-noanimation' // No animation untuk backdrop
-      },
-      hideClass: {
-        backdrop: 'swal2-noanimation'
-      },
+      toast: false, // Popup centered (bukan toast di pojok)
+      position: 'center',
       customClass: {
-        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom',
-        icon: 'swal-jinhub-toast-icon',
-        title: 'swal-jinhub-toast-title',
-        htmlContainer: 'swal-jinhub-toast-text',
-        container: 'swal-jinhub-toast-container'
+        popup: 'swal-jinhub-popup',
+        icon: 'swal-jinhub-icon',
+        title: 'swal-jinhub-title',
+        htmlContainer: 'swal-jinhub-text'
       },
-      didOpen: (toast) => {
-        toast.onmouseenter = Swal.stopTimer;
-        toast.onmouseleave = Swal.resumeTimer;
+      didOpen: (popup) => {
+        // Tambahkan animasi smooth
+        popup.style.animation = 'swal-show 0.3s ease-out';
+      },
+      willClose: () => {
+        // Animasi saat close
+        const popup = Swal.getPopup();
+        if(popup) popup.style.animation = 'swal-hide 0.2s ease-in';
       }
     });
   }
@@ -734,35 +731,15 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // Load pertama: sinkron state beneran dari server
   const pending = loadPending();
 
-  // ===== CRITICAL FIX: CHECK RETURN FROM ADS SYNCHRONOUSLY BEFORE INITIAL RENDER =====
-  // Kalau user baru balik dari ads, JANGAN render dengan cached checkpointCount lama (0)
-  // Kita perlu preserve OLD checkpoint count sampai API update nya datang
-  const returnUrlKey = 'jinhub_return_url_' + slug;
-  const isReturningFromAds = !!localStorage.getItem(returnUrlKey);
-  
   // PREVENT PROGRESS FLICKER: langsung pakai object 'pending' yang UDAH
   // di-parse sama loadPending() di atas. Sebelumnya di sini ada re-read +
   // re-parse localStorage KEDUA KALINYA -- kalau itu gagal/keselip timing,
   // currentCheckpoint diem di nilai awal (0) dan progress kelihatan "0/X"
   // sesaat sebelum kekoreksi belakangan. Sekarang cuma 1 sumber data.
   if(pending && pending.token && pending.checkpointCount >= 0) {
-    // ONLY restore checkpoint count if NOT returning from ads
-    // If returning from ads, checkpoint count in localStorage is STALE
-    if(!isReturningFromAds) {
-      currentCheckpoint = pending.checkpointCount || 0;
-      requiredCheckpoints = pending.requiredCheckpoints || TOTAL_CHECKPOINTS;
-    }
+    currentCheckpoint = pending.checkpointCount || 0;
+    requiredCheckpoints = pending.requiredCheckpoints || TOTAL_CHECKPOINTS;
   }
-  
-  // CRITICAL: Kalau returning from ads, mark as WAITING state
-  // DON'T show stale checkpoint count from localStorage (might be outdated)
-  // API call will update with fresh server data in ~100-500ms
-  if(isReturningFromAds && pending && pending.token) {
-    // Set waiting = true to prevent showing stale progress during API check
-    waiting = true;
-    console.log('[KeySystem] Returning from ads - setting WAITING state until API confirms progress');
-  }
-  
   // Render SEKALI di awal pakai apapun yang udah kita tau (cache keys +
   // pending checkpoint kalau ada) -- SEBELUM ada network call apapun.
   // Ini yang bikin tabel key & progress bar gak sempet nge-flash kosong/0
@@ -794,6 +771,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
   
   // CEK APAKAH BARU BALIK DARI ADS (single-tab flow)
   // Logic: Kalau ada localStorage jinhub_return_url_<slug>, berarti baru balik dari redirect
+  let handledReturnFromAds = false; // Flag to prevent double-handling in normal flow
   (async function checkReturnFromAds(){
     try {
       // Cek localStorage dengan key per-provider: jinhub_return_url_<slug>
@@ -823,7 +801,6 @@ window.JinHubKeySystem.init = function(slug, cfg){
               
               if (statusData.success && statusData.verified) {
                 console.log('[KeySystem] ✓ VERIFIED - All checkpoints completed!');
-                waiting = false; // Clear waiting state
                 pendingToken = pending.token;
                 checkpointVerified = true;
                 currentCheckpoint = statusData.checkpointCount || requiredCheckpoints;
@@ -837,12 +814,12 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 await refreshState();
                 showAlert('success', 'All Checkpoints Completed!', 'Verification successful! You can now claim your key.');
                 statusChecked = true;
+                handledReturnFromAds = true; // Mark as handled to skip normal flow
                 return; // Success - exit early
                 
               } else if (statusData.success && (statusData.checkpointCount || 0) > 0) {
                 console.log('[KeySystem] ✓ PARTIAL - Checkpoint', statusData.checkpointCount, '/', statusData.requiredCheckpoints, 'completed');
                 // INSTANT progress update to prevent flicker
-                waiting = false; // Clear waiting state
                 pendingToken = pending.token;
                 currentCheckpoint = statusData.checkpointCount;
                 requiredCheckpoints = statusData.requiredCheckpoints || requiredCheckpoints;
@@ -855,11 +832,11 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 await refreshState();
                 showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
                 statusChecked = true;
+                handledReturnFromAds = true; // Mark as handled to skip normal flow
                 return; // Success - exit early
                 
               } else if (statusData.code === 'EXPIRED' || !statusData.success) {
                 console.log('[KeySystem] ✗ Session expired/invalid');
-                waiting = false; // Clear waiting state
                 clearPending();
                 showAlert('warning', 'Session Expired', 'Your checkpoint session has expired. Please press START again.');
                 statusChecked = true;
@@ -882,7 +859,6 @@ window.JinHubKeySystem.init = function(slug, cfg){
           
           // If all attempts failed to get verified status, fall back to normal flow
           if(!statusChecked) {
-            waiting = false; // Clear waiting state even on failure
             console.warn('[KeySystem] All status check attempts failed - falling back to normal polling');
             // Don't show error - just fall through to normal refresh
           }
@@ -894,7 +870,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
     
     // Normal flow: refresh state dengan small delay biar UI cache sempat terlihat
     // Delay 300ms cukup untuk user lihat keys yang cached tanpa flicker
+    // SKIP kalau sudah di-handle oleh checkReturnFromAds untuk prevent double-update
     setTimeout(() => {
+      if(handledReturnFromAds){
+        console.log('[KeySystem] Skipping normal flow - already handled by return-from-ads flow');
+        return; // Don't run normal flow if already handled
+      }
+      
       refreshState().then(async function(){
         if(!pending || !pending.token) return;
       
