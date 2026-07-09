@@ -801,55 +801,9 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // pas halaman baru kebuka/reload.
   render();
 
-  // Toast KECIL non-blocking buat status "lagi ngecek checkpoint" -- ini
-  // BUKAN showAlert() yang bikin popup di tengah layar. Popup di tengah
-  // yang nutupin 2.5 detik itu yang bikin progress bar di baliknya
-  // (yang sebenernya udah bener duluan) berasa "telat muncul".
-  function showCheckingToast(){
-    if(!window.Swal) return;
-    // FIX: tutup paksa popup/toast SweetAlert2 lain yang mungkin masih
-    // kebuka/lagi transisi (misal showAlert() sisa render sebelumnya).
-    // Kalau nggak, container lama bisa "ketuker" sama toast baru ini dan
-    // bikin dia numpang class/posisi yang salah (nongol di atas + ada
-    // backdrop hitam, alih-alih toast kecil di bawah).
-    try{ Swal.close(); }catch(e){}
-    Swal.mixin({
-      toast: true,
-      position: 'bottom', // Muncul di bawah card key (SAMA seperti copy key notification)
-      showConfirmButton: false,
-      timer: 4000,
-      timerProgressBar: true,
-      backdrop: false, // DISABLE backdrop (no overlay hitam)
-      showClass: {
-        backdrop: 'swal2-noanimation' // No animation untuk backdrop
-      },
-      hideClass: {
-        backdrop: 'swal2-noanimation'
-      },
-      didOpen: (toast) => {
-        toast.onmouseenter = Swal.stopTimer;
-        toast.onmouseleave = Swal.resumeTimer;
-        // FIX: jaring pengaman -- paksa container-nya transparan & nempel
-        // di bawah-tengah lewat inline style langsung, jaga-jaga kalau CSS
-        // class posisi dari SweetAlert2 telat/gak sempet ke-apply.
-        const container = toast.closest('.swal2-container');
-        if(container){
-          container.style.setProperty('background', 'transparent', 'important');
-          container.style.setProperty('backdrop-filter', 'none', 'important');
-          container.style.setProperty('align-items', 'flex-end', 'important');
-          container.style.setProperty('justify-content', 'center', 'important');
-        }
-      },
-      background: '#1a1a2e',
-      color: '#ffffff',
-      customClass: {
-        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom', // Sama kayak copy key toast
-        icon: 'swal-jinhub-toast-icon',
-        title: 'swal-jinhub-toast-title',
-        container: 'swal-jinhub-toast-container' // Custom container class
-      }
-    }).fire({ icon: 'info', title: 'Checking progress...' });
-  }
+  // Toast "Checking progress..." udah DIHAPUS sesuai request -- gak ada
+  // notif apapun lagi pas user baru balik dari ads, langsung diem-diem
+  // ngecek status di background.
   
   // CEK APAKAH BARU BALIK DARI ADS (single-tab flow)
   // Logic: Kalau ada localStorage jinhub_return_url_<slug>, berarti baru balik dari redirect
@@ -866,10 +820,8 @@ window.JinHubKeySystem.init = function(slug, cfg){
         // User baru balik dari ads redirect - cleanup localStorage
         localStorage.removeItem(returnUrlKey);
         
-        // IMMEDIATE UI FEEDBACK - toast kecil non-blocking (bukan popup
-        // center) biar gak nutupin progress bar yang udah ke-restore bener
-        // dari localStorage di baris atas tadi.
-        showCheckingToast();
+        // Notif "Checking progress..." udah dihapus -- diem-diem aja
+        // ngecek status di background tanpa nampilin apa-apa ke user.
         
         // Kalau ada pending token, cek status langsung DENGAN PRIORITAS TINGGI
         if (pending && pending.token) {
