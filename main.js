@@ -779,17 +779,24 @@ window.JinHubKeySystem.init = function(slug, cfg){
     if(!window.Swal) return;
     Swal.mixin({
       toast: true,
-      position: 'top',
+      position: 'bottom', // Muncul di bawah card key (sama kayak notif copy key)
       showConfirmButton: false,
       timer: 4000,
       timerProgressBar: true,
-      backdrop: false,
+      backdrop: false, // DISABLE backdrop (no overlay hitam)
+      showClass: {
+        backdrop: 'swal2-noanimation' // No animation untuk backdrop
+      },
+      hideClass: {
+        backdrop: 'swal2-noanimation'
+      },
       background: '#1a1a2e',
       color: '#ffffff',
       customClass: {
-        popup: 'swal-jinhub-toast',
+        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom',
         icon: 'swal-jinhub-toast-icon',
-        title: 'swal-jinhub-toast-title'
+        title: 'swal-jinhub-toast-title',
+        container: 'swal-jinhub-toast-container' // Custom container class
       }
     }).fire({ icon: 'info', title: 'Checking progress...' });
   }
