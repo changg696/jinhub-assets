@@ -143,15 +143,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
     return res.json();
   }
   async function apiPost(path, body){
-    // Detect dev mode from current URL and append to path
-    const urlParams = new URLSearchParams(window.location.search);
-    const isDev = urlParams.get('dev') === '1';
-    console.log('[DEV] URL params:', window.location.search, 'isDev:', isDev);
-    const separator = path.includes('?') ? '&' : '?';
-    const finalPath = isDev ? path + separator + 'dev=1' : path;
-    console.log('[DEV] Final API path:', finalPath);
-    
-    const res = await fetch(API + finalPath, {
+    const res = await fetch(API + path, {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
@@ -561,40 +553,6 @@ window.JinHubKeySystem.init = function(slug, cfg){
       
       pendingToken = data.token;
       savePending(data.token, false, currentCheckpoint, requiredCheckpoints);
-      
-      // DEV MODE: Auto-complete checkpoint tanpa redirect ke ads
-      if(data.isDev){
-        console.log('[DEV] Dev mode detected! Auto-completing...');
-        showAlert('info', 'DEV MODE', 'Auto-completing checkpoint in 2 seconds...');
-        setTimeout(async () => {
-          try {
-            // Simulate callback dengan memanggil API callback langsung
-            await fetch(API + '/callback?token=' + encodeURIComponent(data.token));
-            
-            // Refresh status setelah 1 detik
-            setTimeout(async () => {
-              const statusData = await apiGet('/status?token=' + encodeURIComponent(data.token));
-              if(statusData.success && statusData.verified){
-                checkpointVerified = true;
-                currentCheckpoint = statusData.checkpointCount || requiredCheckpoints;
-                savePending(data.token, true, currentCheckpoint, requiredCheckpoints);
-                showAlert('success', 'DEV MODE: Checkpoint Complete!', 'Checkpoint auto-completed. You can now claim your key.');
-              } else if(statusData.success && (statusData.checkpointCount || 0) > 0){
-                currentCheckpoint = statusData.checkpointCount;
-                savePending(data.token, false, currentCheckpoint, requiredCheckpoints);
-                showAlert('success', 'DEV MODE: Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints, 'Press START again for next checkpoint.');
-              }
-              starting = false;
-              render();
-            }, 1000);
-          } catch(e) {
-            showAlert('error', 'DEV MODE Error', 'Failed to auto-complete: ' + e.message);
-            starting = false;
-            render();
-          }
-        }, 2000);
-        return;
-      }
       
       if(data.checkpointUrl){
         // REDIRECT LANGSUNG ke checkpoint URL di tab yang sama (bukan buka tab baru)
