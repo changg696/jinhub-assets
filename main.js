@@ -765,11 +765,21 @@ window.JinHubKeySystem.init = function(slug, cfg){
     if(!window.Swal) return;
     Swal.mixin({
       toast: true,
-      position: 'bottom', // Muncul di bawah kayak notif copy key
+      position: 'bottom', // Muncul di bawah card key (SAMA seperti copy key notification)
       showConfirmButton: false,
       timer: 4000,
       timerProgressBar: true,
-      backdrop: false,
+      backdrop: false, // DISABLE backdrop (no overlay hitam)
+      showClass: {
+        backdrop: 'swal2-noanimation' // No animation untuk backdrop
+      },
+      hideClass: {
+        backdrop: 'swal2-noanimation'
+      },
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      },
       background: '#1a1a2e',
       color: '#ffffff',
       customClass: {
