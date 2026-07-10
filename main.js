@@ -674,41 +674,46 @@ window.JinHubKeySystem.init = function(slug, cfg){
     
     const showCopyModal = function(success){
       // Remove existing modal if any
-      const existing = document.querySelector('.jh-modal-overlay');
+      const existing = document.querySelector('[data-jh-copy-modal]');
       if(existing) existing.remove();
       
-      const icon = success 
-        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+      const iconSvg = success 
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><path d="M20 6L9 17l-5-5"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><path d="M18 6L6 18M6 6l12 12"/></svg>';
       
       const iconColor = success ? '#10b981' : '#ef4444';
       const title = success ? 'Copied!' : 'Copy Failed';
-      const text = success ? 'Key copied to clipboard successfully' : 'Failed to copy key to clipboard';
+      const text = success ? 'Key copied to clipboard successfully' : 'Failed to copy key';
       
+      // Create overlay with FULL inline styles
       const overlay = document.createElement('div');
-      overlay.className = 'jh-modal-overlay jh-modal-fade-in';
-      // Force z-index inline to ensure visibility
-      overlay.style.cssText = 'position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;';
-      overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
-        '<div class="jh-modal-icon" style="color: ' + iconColor + '">' +
-          icon +
-        '</div>' +
-        '<h2 class="jh-modal-title">' + title + '</h2>' +
-        '<p class="jh-modal-text">' + text + '</p>' +
-      '</div>';
+      overlay.setAttribute('data-jh-copy-modal', 'true');
+      overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); animation: fadeIn 0.2s ease;';
       
+      // Create modal with FULL inline styles
+      const modal = document.createElement('div');
+      modal.style.cssText = 'background: linear-gradient(145deg, #1a1a2e, #16192b); border-radius: 20px; padding: 40px 32px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 400px; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
+      
+      modal.innerHTML = '<div style="width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; background: rgba(' + (success ? '16, 185, 129' : '239, 68, 68') + ', 0.1); display: flex; align-items: center; justify-content: center; color: ' + iconColor + ';">' + iconSvg + '</div>' +
+        '<h2 style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 0 0 8px; font-family: Space Grotesk, sans-serif;">' + title + '</h2>' +
+        '<p style="font-size: 15px; color: rgba(255,255,255,0.8); margin: 0; font-family: Space Grotesk, sans-serif; line-height: 1.5;">' + text + '</p>';
+      
+      overlay.appendChild(modal);
       document.body.appendChild(overlay);
+      
+      // Animate in
+      setTimeout(function(){
+        modal.style.transform = 'scale(1)';
+        modal.style.opacity = '1';
+      }, 10);
       
       // Auto-close after 2 seconds
       setTimeout(function(){
-        overlay.classList.remove('jh-modal-fade-in');
-        overlay.classList.add('jh-modal-fade-out');
-        const modal = overlay.querySelector('.jh-modal');
-        if(modal){
-          modal.classList.remove('jh-modal-scale-in');
-          modal.classList.add('jh-modal-scale-out');
-        }
-        setTimeout(function(){ overlay.remove(); }, 200);
+        modal.style.transform = 'scale(0.9)';
+        modal.style.opacity = '0';
+        setTimeout(function(){ 
+          if(overlay.parentNode) overlay.remove(); 
+        }, 200);
       }, 2000);
     };
     
