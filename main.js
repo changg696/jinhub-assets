@@ -192,21 +192,19 @@ window.JinHubKeySystem.init = function(slug, cfg){
     // Create modal HTML
     const overlay = document.createElement('div');
     overlay.className = 'jh-modal-overlay jh-modal-fade-in';
-    overlay.innerHTML = `
-      <div class="jh-modal jh-modal-scale-in">
-        <div class="jh-modal-icon" style="color: ${iconColors[type] || iconColors.info}">
-          ${icons[type] || icons.info}
-        </div>
-        <h2 class="jh-modal-title">${title}</h2>
-        <p class="jh-modal-text">${text}</p>
-      </div>
-    `;
+    overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
+      '<div class="jh-modal-icon" style="color: ' + (iconColors[type] || iconColors.info) + '">' +
+        (icons[type] || icons.info) +
+      '</div>' +
+      '<h2 class="jh-modal-title">' + title + '</h2>' +
+      '<p class="jh-modal-text">' + text + '</p>' +
+    '</div>';
     
     document.body.appendChild(overlay);
     
     // Auto-close after 2.5 seconds (except for loading type)
     if(type !== 'loading'){
-      setTimeout(() => {
+      setTimeout(function(){
         overlay.classList.remove('jh-modal-fade-in');
         overlay.classList.add('jh-modal-fade-out');
         const modal = overlay.querySelector('.jh-modal');
@@ -214,7 +212,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
           modal.classList.remove('jh-modal-scale-in');
           modal.classList.add('jh-modal-scale-out');
         }
-        setTimeout(() => overlay.remove(), 200);
+        setTimeout(function(){ overlay.remove(); }, 200);
       }, 2500);
     }
     
@@ -672,9 +670,9 @@ window.JinHubKeySystem.init = function(slug, cfg){
   function copyKey(keyString){
     if(!keyString) return;
     
-    const showToast = function(success){
-      // Remove existing toast if any
-      const existing = document.querySelector('.jh-toast');
+    const showCopyModal = function(success){
+      // Remove existing modal if any
+      const existing = document.querySelector('.jh-modal-overlay');
       if(existing) existing.remove();
       
       const icon = success 
@@ -682,34 +680,42 @@ window.JinHubKeySystem.init = function(slug, cfg){
         : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
       
       const iconColor = success ? '#10b981' : '#ef4444';
+      const title = success ? 'Copied!' : 'Copy Failed';
+      const text = success ? 'Key copied to clipboard successfully' : 'Failed to copy key to clipboard';
       
-      const toast = document.createElement('div');
-      toast.className = 'jh-toast jh-toast-slide-in';
-      toast.innerHTML = `
-        <div class="jh-toast-icon" style="color: ${iconColor}">
-          ${icon}
-        </div>
-        <span class="jh-toast-text">${success ? 'Key copied to clipboard!' : 'Failed to copy key'}</span>
-      `;
+      const overlay = document.createElement('div');
+      overlay.className = 'jh-modal-overlay jh-modal-fade-in';
+      overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
+        '<div class="jh-modal-icon" style="color: ' + iconColor + '">' +
+          icon +
+        '</div>' +
+        '<h2 class="jh-modal-title">' + title + '</h2>' +
+        '<p class="jh-modal-text">' + text + '</p>' +
+      '</div>';
       
-      document.body.appendChild(toast);
+      document.body.appendChild(overlay);
       
-      // Auto-close after 3 seconds
-      setTimeout(() => {
-        toast.classList.remove('jh-toast-slide-in');
-        toast.classList.add('jh-toast-slide-out');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
+      // Auto-close after 2 seconds
+      setTimeout(function(){
+        overlay.classList.remove('jh-modal-fade-in');
+        overlay.classList.add('jh-modal-fade-out');
+        const modal = overlay.querySelector('.jh-modal');
+        if(modal){
+          modal.classList.remove('jh-modal-scale-in');
+          modal.classList.add('jh-modal-scale-out');
+        }
+        setTimeout(function(){ overlay.remove(); }, 200);
+      }, 2000);
     };
     
     const done = function(success){
       const allCopyBtns = document.querySelectorAll('[data-pk-copy]');
-      allCopyBtns.forEach(btn => btn.classList.add('is-copied'));
+      allCopyBtns.forEach(function(btn){ btn.classList.add('is-copied'); });
       window.setTimeout(function(){
-        allCopyBtns.forEach(btn => btn.classList.remove('is-copied'));
+        allCopyBtns.forEach(function(btn){ btn.classList.remove('is-copied'); });
       }, 1400);
       
-      showToast(success);
+      showCopyModal(success);
     };
     
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -779,26 +785,24 @@ window.JinHubKeySystem.init = function(slug, cfg){
     const overlay = document.createElement('div');
     overlay.className = 'jh-modal-overlay jh-modal-fade-in';
     overlay.setAttribute('data-jh-verifying', 'true'); // Mark as verifying modal for easy reference
-    overlay.innerHTML = `
-      <div class="jh-modal jh-modal-scale-in">
-        <button class="jh-modal-close" onclick="this.closest('.jh-modal-overlay').remove()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-        <h2 class="jh-modal-title">Verification in progress</h2>
-        <p class="jh-modal-subtitle">Keep this tab open. The key flow will finish here.</p>
-        <div class="jh-modal-checkpoint-progress">
-          <span>CHECKPOINT 1 / 1</span>
-        </div>
-        <div class="jh-modal-icon jh-modal-spinner" style="color: #3b82f6">
-          <svg class="jh-spinner" viewBox="0 0 24 24" fill="none">
-            <circle class="jh-spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
-          </svg>
-        </div>
-        <h3 class="jh-modal-verifying-title">Verifying tasks...</h3>
-        <p class="jh-modal-verifying-text">Waiting for LootLabs to confirm your completed tasks. This takes a few seconds.</p>
-        <button class="jh-modal-cancel" onclick="this.closest('.jh-modal-overlay').remove()">Cancel</button>
-      </div>
-    `;
+    overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
+      '<button class="jh-modal-close" onclick="this.closest(\'.jh-modal-overlay\').remove()">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+      '</button>' +
+      '<h2 class="jh-modal-title">Verification in progress</h2>' +
+      '<p class="jh-modal-subtitle">Keep this tab open. The key flow will finish here.</p>' +
+      '<div class="jh-modal-checkpoint-progress">' +
+        '<span>CHECKPOINT 1 / 1</span>' +
+      '</div>' +
+      '<div class="jh-modal-icon jh-modal-spinner" style="color: #3b82f6">' +
+        '<svg class="jh-spinner" viewBox="0 0 24 24" fill="none">' +
+          '<circle class="jh-spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>' +
+        '</svg>' +
+      '</div>' +
+      '<h3 class="jh-modal-verifying-title">Verifying tasks...</h3>' +
+      '<p class="jh-modal-verifying-text">Waiting for LootLabs to confirm your completed tasks. This takes a few seconds.</p>' +
+      '<button class="jh-modal-cancel" onclick="this.closest(\'.jh-modal-overlay\').remove()">Cancel</button>' +
+    '</div>';
     
     document.body.appendChild(overlay);
     return overlay;
