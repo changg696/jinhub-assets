@@ -167,44 +167,58 @@ window.JinHubKeySystem.init = function(slug, cfg){
     el.note.hidden = false;
   }
 
-  // SweetAlert2 notification helper
+  // Custom Modal System (modern, no SweetAlert2 dependency)
   function showAlert(type, title, text){
-    if(!window.Swal) return; // Fallback kalau SweetAlert2 belum load
+    // Remove existing modal if any
+    const existing = document.querySelector('.jh-modal-overlay');
+    if(existing) existing.remove();
     
     const icons = {
-      success: 'success',
-      error: 'error',
-      warning: 'warning',
-      info: 'info'
+      success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+      error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+      warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+      info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>',
+      loading: '<svg class="jh-spinner" viewBox="0 0 24 24" fill="none"><circle class="jh-spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/></svg>'
     };
     
-    Swal.fire({
-      icon: icons[type] || 'info',
-      title: title,
-      text: text,
-      showConfirmButton: false, // Hilangkan tombol OK
-      timer: 2500, // Auto-close setelah 2.5 detik
-      timerProgressBar: false, // MATIKAN progress bar biar clean
-      background: '#1a1a2e',
-      color: '#ffffff',
-      toast: false, // Popup centered (bukan toast di pojok)
-      position: 'center',
-      customClass: {
-        popup: 'swal-jinhub-popup',
-        icon: 'swal-jinhub-icon',
-        title: 'swal-jinhub-title',
-        htmlContainer: 'swal-jinhub-text'
-      },
-      didOpen: (popup) => {
-        // Tambahkan animasi smooth
-        popup.style.animation = 'swal-show 0.3s ease-out';
-      },
-      willClose: () => {
-        // Animasi saat close
-        const popup = Swal.getPopup();
-        if(popup) popup.style.animation = 'swal-hide 0.2s ease-in';
-      }
-    });
+    const iconColors = {
+      success: '#10b981',
+      error: '#ef4444',
+      warning: '#f59e0b',
+      info: '#3b82f6',
+      loading: '#3b82f6'
+    };
+    
+    // Create modal HTML
+    const overlay = document.createElement('div');
+    overlay.className = 'jh-modal-overlay jh-modal-fade-in';
+    overlay.innerHTML = `
+      <div class="jh-modal jh-modal-scale-in">
+        <div class="jh-modal-icon" style="color: ${iconColors[type] || iconColors.info}">
+          ${icons[type] || icons.info}
+        </div>
+        <h2 class="jh-modal-title">${title}</h2>
+        <p class="jh-modal-text">${text}</p>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Auto-close after 2.5 seconds (except for loading type)
+    if(type !== 'loading'){
+      setTimeout(() => {
+        overlay.classList.remove('jh-modal-fade-in');
+        overlay.classList.add('jh-modal-fade-out');
+        const modal = overlay.querySelector('.jh-modal');
+        if(modal){
+          modal.classList.remove('jh-modal-scale-in');
+          modal.classList.add('jh-modal-scale-out');
+        }
+        setTimeout(() => overlay.remove(), 200);
+      }, 2500);
+    }
+    
+    return overlay; // Return for manual control if needed
   }
 
   function render(){
@@ -659,37 +673,33 @@ window.JinHubKeySystem.init = function(slug, cfg){
     if(!keyString) return;
     
     const showToast = function(success){
-      if(!window.Swal) return; // Fallback kalau SweetAlert2 belum load
+      // Remove existing toast if any
+      const existing = document.querySelector('.jh-toast');
+      if(existing) existing.remove();
       
-      Swal.mixin({
-        toast: true,
-        position: "bottom", // Muncul di bawah card key
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        backdrop: false, // DISABLE backdrop (no overlay hitam)
-        showClass: {
-          backdrop: 'swal2-noanimation' // No animation untuk backdrop
-        },
-        hideClass: {
-          backdrop: 'swal2-noanimation'
-        },
-        didOpen: (toast) => {
-          toast.onmouseenter = Swal.stopTimer;
-          toast.onmouseleave = Swal.resumeTimer;
-        },
-        background: '#1a1a2e',
-        color: '#ffffff',
-        customClass: {
-          popup: 'swal-jinhub-toast swal-jinhub-toast-bottom',
-          icon: 'swal-jinhub-toast-icon',
-          title: 'swal-jinhub-toast-title',
-          container: 'swal-jinhub-toast-container' // Custom container class
-        }
-      }).fire({
-        icon: success ? "success" : "error",
-        title: success ? "Key copied to clipboard!" : "Failed to copy key"
-      });
+      const icon = success 
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+      
+      const iconColor = success ? '#10b981' : '#ef4444';
+      
+      const toast = document.createElement('div');
+      toast.className = 'jh-toast jh-toast-slide-in';
+      toast.innerHTML = `
+        <div class="jh-toast-icon" style="color: ${iconColor}">
+          ${icon}
+        </div>
+        <span class="jh-toast-text">${success ? 'Key copied to clipboard!' : 'Failed to copy key'}</span>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      // Auto-close after 3 seconds
+      setTimeout(() => {
+        toast.classList.remove('jh-toast-slide-in');
+        toast.classList.add('jh-toast-slide-out');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
     };
     
     const done = function(success){
@@ -760,28 +770,38 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // pas halaman baru kebuka/reload.
   render();
 
-  // Toast KECIL non-blocking buat status "lagi ngecek checkpoint" -- ini
-  // BUKAN showAlert() yang bikin popup di tengah layar. Popup di tengah
-  // yang nutupin 2.5 detik itu yang bikin progress bar di baliknya
-  // (yang sebenernya udah bener duluan) berasa "telat muncul".
-  function showCheckingToast(){
-    if(!window.Swal) return;
-    Swal.mixin({
-      toast: true,
-      position: 'bottom', // Muncul di bawah kayak notif copy key
-      showConfirmButton: false,
-      timer: 4000,
-      timerProgressBar: true,
-      backdrop: false,
-      background: '#1a1a2e',
-      color: '#ffffff',
-      customClass: {
-        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom', // Sama kayak copy key toast
-        icon: 'swal-jinhub-toast-icon',
-        title: 'swal-jinhub-toast-title',
-        container: 'swal-jinhub-toast-container' // Custom container class
-      }
-    }).fire({ icon: 'info', title: 'Checking progress...' });
+  // Show "Verifying tasks..." modal (with spinner, like in screenshot)
+  function showVerifyingModal(){
+    // Remove existing modal if any
+    const existing = document.querySelector('.jh-modal-overlay');
+    if(existing) existing.remove();
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'jh-modal-overlay jh-modal-fade-in';
+    overlay.setAttribute('data-jh-verifying', 'true'); // Mark as verifying modal for easy reference
+    overlay.innerHTML = `
+      <div class="jh-modal jh-modal-scale-in">
+        <button class="jh-modal-close" onclick="this.closest('.jh-modal-overlay').remove()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <h2 class="jh-modal-title">Verification in progress</h2>
+        <p class="jh-modal-subtitle">Keep this tab open. The key flow will finish here.</p>
+        <div class="jh-modal-checkpoint-progress">
+          <span>CHECKPOINT 1 / 1</span>
+        </div>
+        <div class="jh-modal-icon jh-modal-spinner" style="color: #3b82f6">
+          <svg class="jh-spinner" viewBox="0 0 24 24" fill="none">
+            <circle class="jh-spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
+          </svg>
+        </div>
+        <h3 class="jh-modal-verifying-title">Verifying tasks...</h3>
+        <p class="jh-modal-verifying-text">Waiting for LootLabs to confirm your completed tasks. This takes a few seconds.</p>
+        <button class="jh-modal-cancel" onclick="this.closest('.jh-modal-overlay').remove()">Cancel</button>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    return overlay;
   }
   
   // CEK APAKAH BARU BALIK DARI ADS (single-tab flow)
@@ -799,10 +819,8 @@ window.JinHubKeySystem.init = function(slug, cfg){
         // User baru balik dari ads redirect - cleanup localStorage
         localStorage.removeItem(returnUrlKey);
         
-        // IMMEDIATE UI FEEDBACK - toast kecil non-blocking (bukan popup
-        // center) biar gak nutupin progress bar yang udah ke-restore bener
-        // dari localStorage di baris atas tadi.
-        showCheckingToast();
+        // IMMEDIATE UI FEEDBACK - show "Verifying tasks..." modal
+        const verifyingModal = showVerifyingModal();
         
         // Kalau ada pending token, cek status langsung DENGAN PRIORITAS TINGGI
         if (pending && pending.token) {
@@ -825,8 +843,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 // INSTANT UI UPDATE before state refresh
                 render();
                 
-                // Load state lalu show success alert
+                // Load state
                 await refreshState();
+                
+                // Close verifying modal first
+                if(verifyingModal) verifyingModal.remove();
+                
+                // Show success alert
                 showAlert('success', 'All Checkpoints Completed!', 'Verification successful! You can now claim your key.');
                 statusChecked = true;
                 handledReturnFromAds = true; // Mark as handled to skip normal flow
@@ -845,6 +868,11 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 render();
                 
                 await refreshState();
+                
+                // Close verifying modal first
+                if(verifyingModal) verifyingModal.remove();
+                
+                // Show success alert
                 showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
                 statusChecked = true;
                 handledReturnFromAds = true; // Mark as handled to skip normal flow
@@ -852,6 +880,10 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 
               } else if (statusData.code === 'EXPIRED' || !statusData.success) {
                 console.log('[KeySystem] ✗ Session expired/invalid');
+                
+                // Close verifying modal first
+                if(verifyingModal) verifyingModal.remove();
+                
                 clearPending();
                 showAlert('warning', 'Session Expired', 'Your checkpoint session has expired. Please press START again.');
                 statusChecked = true;
