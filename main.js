@@ -710,11 +710,15 @@ window.JinHubKeySystem.init = function(slug, cfg){
         state.activeKeys = state.keys.filter(k => k.expiresAt > now).map(k => k.key);
         state.expiredKeys = state.keys.filter(k => k.expiresAt <= now).map(k => k.key);
         
+        // CRITICAL: Update keys cache IMMEDIATELY after claim success
+        saveKeysCache(state.keys, state.totalKeys, state.remaining);
+        
         checkpointVerified = false;
         pendingToken = null;
-        currentCheckpoint = 0;
         clearPending();
-        clearCheckpointProgress(); // CRITICAL FIX: Clear cached progress to reset to 0/2
+        clearCheckpointProgress(); // CRITICAL FIX: Clear cached progress FIRST before resetting
+        currentCheckpoint = 0; // THEN reset to 0 after cache is cleared
+        saveCheckpointProgress(0, requiredCheckpoints); // FORCE save 0/2 to cache immediately
         
         // Show success notifications based on mode
         if(mode === 'extend' && data.addedMin){
