@@ -77,6 +77,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
   let currentCheckpoint = 0; // Checkpoint saat ini (0-based)
   let requiredCheckpoints = TOTAL_CHECKPOINTS; // Total checkpoint yang dibutuhkan dari server
   let firstRender = true; // dipakai buat matiin transition CSS di render pertama
+  let skipCacheRestore = false; // Flag untuk skip restore dari cache setelah claim
 
   function getCooldownMs(){
     if(!state.lastClaimAt) return 0;
@@ -284,12 +285,16 @@ window.JinHubKeySystem.init = function(slug, cfg){
     // But ALWAYS save current progress so we can move forward!
     const cachedProgress = loadCheckpointProgress();
     
-    // Only restore from cache if currentCheckpoint would GO BACKWARDS
-    // (e.g., currentCheckpoint=0 but cache=2, restore to 2)
-    // But if currentCheckpoint is HIGHER or EQUAL, use current value!
-    if(cachedProgress && cachedProgress.checkpoint > currentCheckpoint) {
+    // SKIP cache restore if we just claimed a key (to allow reset to 0)
+    if(!skipCacheRestore && cachedProgress && cachedProgress.checkpoint > currentCheckpoint) {
       console.log('[KeySystem] Restoring checkpoint from cache to prevent backward:', cachedProgress.checkpoint, 'instead of', currentCheckpoint);
       currentCheckpoint = cachedProgress.checkpoint;
+    }
+    
+    // Reset flag after first render following claim
+    if(skipCacheRestore) {
+      console.log('[KeySystem] Skipping cache restore - fresh claim reset');
+      skipCacheRestore = false; // Reset flag for next render
     }
     
     // ALWAYS save current checkpoint (even if same or higher)
@@ -716,6 +721,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
         checkpointVerified = false;
         pendingToken = null;
         clearPending();
+        skipCacheRestore = true; // CRITICAL: Skip cache restore in next render() call
         clearCheckpointProgress(); // CRITICAL FIX: Clear cached progress FIRST before resetting
         currentCheckpoint = 0; // THEN reset to 0 after cache is cleared
         saveCheckpointProgress(0, requiredCheckpoints); // FORCE save 0/2 to cache immediately
