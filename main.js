@@ -714,6 +714,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
         pendingToken = null;
         currentCheckpoint = 0;
         clearPending();
+        clearCheckpointProgress(); // CRITICAL FIX: Clear cached progress to reset to 0/2
         
         // Show success notifications based on mode
         if(mode === 'extend' && data.addedMin){
