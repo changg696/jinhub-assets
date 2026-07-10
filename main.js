@@ -921,13 +921,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
         // User baru balik dari ads redirect - cleanup localStorage
         localStorage.removeItem(returnUrlKey);
         
+        // SHOW MODAL IMMEDIATELY (bahkan sebelum cek pending token)
+        // Biar user PASTI lihat "Verification in progress"
+        const modalCheckpointNum = Math.min((pending && pending.checkpointCount || 0) + 1, requiredCheckpoints || TOTAL_CHECKPOINTS);
+        showVerifyingModal(modalCheckpointNum, requiredCheckpoints || TOTAL_CHECKPOINTS);
+        
         // Kalau ada pending token, cek status langsung DENGAN PRIORITAS TINGGI
         if (pending && pending.token) {
-          // Tampilin modal verifikasi di tengah layar selagi kita ngecek
-          // status ke server -- ini yang muncul instead of toast lama.
-          const modalCheckpointNum = Math.min((pending.checkpointCount || 0) + 1, requiredCheckpoints || TOTAL_CHECKPOINTS);
-          showVerifyingModal(modalCheckpointNum, requiredCheckpoints || TOTAL_CHECKPOINTS);
-
           // MULTIPLE RAPID CHECKS (3x dengan delay pendek) untuk responsiveness
           let statusChecked = false;
           
@@ -1003,6 +1003,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
             // Don't show error - just fall through to normal refresh
             closeVerifyingModal();
           }
+        } else {
+          // No pending token - close modal immediately and show message
+          console.warn('[KeySystem] No pending token found after return from ads');
+          closeVerifyingModal();
+          setTimeout(function() {
+            showAlert('warning', 'Session Not Found', 'Please press START to begin a new checkpoint.');
+          }, 500);
         }
       }
     } catch(e) {
