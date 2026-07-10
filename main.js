@@ -223,52 +223,62 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // MODAL "Verification in progress" -- centered, modern, dipakein pas kita
   // lagi ngecek status checkpoint ke server (baik pas user baru balik dari
   // ads/redirect maupun pas polling biasa nunggu callback). Ganti toast kecil
-  // yang lama sama popup tengah yang lebih jelas & gak gampang keskip mata.
+  // NATIVE HTML POPUP "Verification in progress" (NO EXTERNAL LIBRARY)
+  // Popup muncul di tengah layar pas user balik dari ads, dengan loading
+  // spinner dan progress checkpoint. Pure HTML/CSS/JS, gak pakai SweetAlert2.
   function showVerifyingModal(checkpointNum, totalCheckpoints){
-    if(!window.Swal) return;
+    // Remove existing modal kalau ada (cleanup)
+    closeVerifyingModal();
+    
     const safeTotal = totalCheckpoints || 1;
     const safeCheckpoint = Math.max(1, Math.min(checkpointNum || 1, safeTotal));
-    Swal.fire({
-      html: '' +
-        '<div class="pk-verify-modal">' +
-          '<button type="button" class="pk-verify-close" data-pk-verify-cancel aria-label="Cancel">&times;</button>' +
-          '<h3 class="pk-verify-title">Verification in progress</h3>' +
-          '<p class="pk-verify-sub">Keep this tab open. The key flow will finish here.</p>' +
-          '<div class="pk-verify-checkpoint">CHECKPOINT ' + safeCheckpoint + ' / ' + safeTotal + '</div>' +
-          '<div class="pk-verify-spinner" aria-hidden="true"></div>' +
-          '<div class="pk-verify-status">Verifying tasks&hellip;</div>' +
-          '<p class="pk-verify-desc">Waiting for ' + providerDisplayName + ' to confirm your completed tasks. This takes a few seconds.</p>' +
-          '<button type="button" class="pk-verify-cancel" data-pk-verify-cancel>Cancel</button>' +
-        '</div>',
-      showConfirmButton: false,
-      showCloseButton: false,
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      background: '#14171f',
-      color: '#ffffff',
-      width: 440,
-      customClass: { popup: 'swal-jinhub-popup swal-jinhub-verify-popup' },
-      didOpen: (popup) => {
-        popup.style.animation = 'swal-show 0.3s ease-out';
-        popup.querySelectorAll('[data-pk-verify-cancel]').forEach(function(btn){
-          btn.addEventListener('click', function(){ Swal.close(); });
-        });
-      },
-      willClose: () => {
-        const popup = Swal.getPopup();
-        if(popup) popup.style.animation = 'swal-hide 0.2s ease-in';
-      }
-    });
+    
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'pk-verify-overlay';
+    overlay.className = 'pk-verify-overlay';
+    
+    // Create modal content (string concatenation untuk avoid nested template literals)
+    overlay.innerHTML = 
+      '<div class="pk-verify-modal">' +
+        '<button type="button" class="pk-verify-close" aria-label="Cancel">&times;</button>' +
+        '<h3 class="pk-verify-title">Verification in progress</h3>' +
+        '<p class="pk-verify-sub">Keep this tab open. The key flow will finish here.</p>' +
+        '<div class="pk-verify-checkpoint">CHECKPOINT ' + safeCheckpoint + ' / ' + safeTotal + '</div>' +
+        '<div class="pk-verify-spinner" aria-hidden="true"></div>' +
+        '<div class="pk-verify-status">Verifying tasks&hellip;</div>' +
+        '<p class="pk-verify-desc">Waiting for ' + providerDisplayName + ' to confirm your completed tasks. This takes a few seconds.</p>' +
+        '<button type="button" class="pk-verify-cancel-btn">Cancel</button>' +
+      '</div>';
+    
+    // Add to body
+    document.body.appendChild(overlay);
+    
+    // Trigger animation (slight delay untuk smooth fade-in)
+    setTimeout(function() {
+      overlay.classList.add('pk-verify-visible');
+    }, 10);
+    
+    // Close handlers
+    const closeBtn = overlay.querySelector('.pk-verify-close');
+    const cancelBtn = overlay.querySelector('.pk-verify-cancel-btn');
+    
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeVerifyingModal);
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', closeVerifyingModal);
+    }
   }
 
   // Update angka checkpoint di modal verifikasi yang lagi kebuka (kalau ada),
   // tanpa nge-restart animasi/popup-nya.
   function updateVerifyingModal(checkpointNum, totalCheckpoints){
-    if(!window.Swal || !Swal.isVisible()) return;
-    const popup = Swal.getPopup();
-    if(!popup) return;
-    const label = popup.querySelector('.pk-verify-checkpoint');
-    if(label){
+    const overlay = document.getElementById('pk-verify-overlay');
+    if (!overlay) return;
+    
+    const label = overlay.querySelector('.pk-verify-checkpoint');
+    if (label) {
       const safeTotal = totalCheckpoints || 1;
       const safeCheckpoint = Math.max(1, Math.min(checkpointNum || 1, safeTotal));
       label.textContent = 'CHECKPOINT ' + safeCheckpoint + ' / ' + safeTotal;
@@ -276,7 +286,18 @@ window.JinHubKeySystem.init = function(slug, cfg){
   }
 
   function closeVerifyingModal(){
-    if(window.Swal && Swal.isVisible()) Swal.close();
+    const overlay = document.getElementById('pk-verify-overlay');
+    if (!overlay) return;
+    
+    // Fade out animation
+    overlay.classList.remove('pk-verify-visible');
+    
+    // Remove from DOM after animation
+    setTimeout(function() {
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    }, 300);
   }
 
   function render(){
