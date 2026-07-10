@@ -1,4 +1,3 @@
-
 window.JinHubKeySystem = window.JinHubKeySystem || {};
 
 window.JinHubKeySystem.init = function(slug, cfg){
@@ -78,6 +77,20 @@ window.JinHubKeySystem.init = function(slug, cfg){
   let requiredCheckpoints = TOTAL_CHECKPOINTS; // Total checkpoint yang dibutuhkan dari server
   let firstRender = true; // dipakai buat matiin transition CSS di render pertama
   let skipCacheRestore = false; // Flag untuk skip restore dari cache setelah claim
+
+  // BUG FIX: race condition guard.
+  // Beberapa flow (checkReturnFromAds, refreshState().then() di init, pollStatus)
+  // nge-fetch status checkpoint ke server secara ASYNC lalu nimpa currentCheckpoint/
+  // checkpointVerified pas responsenya kelar -- tapi kalau user sempet klik claim
+  // (Get a New Key/Renew/+Xh) SEBELUM response lama itu balik, claimKey() udah
+  // reset semuanya ke 0, terus response lama yang telat itu nimpa BALIK ke nilai
+  // lama (misal 2/2) begitu dia kelar. Makanya progress keliatan gak reset abis
+  // claim padahal claimKey()-nya sendiri udah bener.
+  // Fix: setiap kali claimKey() berhasil (atau sesi di-reset total), increment
+  // claimGeneration. Flow async manapun yang nyimpen snapshot generation ini
+  // SEBELUM mulai await, WAJIB cek generation masih sama sebelum nerapin hasil
+  // fetch-nya -- kalau beda, berarti udah stale/basi, di-skip aja.
+  let claimGeneration = 0;
 
   function getCooldownMs(){
     if(!state.lastClaimAt) return 0;
@@ -725,6 +738,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
         clearCheckpointProgress(); // CRITICAL FIX: Clear cached progress FIRST before resetting
         currentCheckpoint = 0; // THEN reset to 0 after cache is cleared
         saveCheckpointProgress(0, requiredCheckpoints); // FORCE save 0/2 to cache immediately
+        claimGeneration++; // BUG FIX: invalidate any in-flight status fetches from before this claim
         
         // Show success notifications based on mode
         if(mode === 'extend' && data.addedMin){
@@ -754,7 +768,10 @@ window.JinHubKeySystem.init = function(slug, cfg){
         if(state.totalKeys >= 3 || (mode !== 'new' && !targetKey)){
           checkpointVerified = false;
           pendingToken = null;
+          currentCheckpoint = 0;
           clearPending();
+          clearCheckpointProgress();
+          claimGeneration++; // BUG FIX: same as success path
         }
         
         // Show error notification
@@ -888,6 +905,12 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // Logic: Kalau ada localStorage jinhub_return_url_<slug>, berarti baru balik dari redirect
   let handledReturnFromAds = false; // Flag to prevent double-handling in normal flow
   (async function checkReturnFromAds(){
+    // BUG FIX: snapshot generation SEBELUM await apapun. Kalau user klik
+    // claim (Get a New Key/Renew/+Xh) di tengah-tengah IIFE ini nunggu
+    // response server, claimGeneration bakal berubah -- generation check di
+    // bawah bakal detect itu dan skip nerapin data status yang udah basi,
+    // biar gak nimpa balik progress yang barusan di-reset ke 0.
+    const startGeneration = claimGeneration;
     try {
       // Cek localStorage dengan key per-provider: jinhub_return_url_<slug>
       const returnUrlKey = 'jinhub_return_url_' + slug;
@@ -914,6 +937,16 @@ window.JinHubKeySystem.init = function(slug, cfg){
               console.log('[KeySystem] Status check attempt', attempt);
               const statusData = await apiGet('/status?token=' + encodeURIComponent(pending.token));
               
+              // BUG FIX: kalau claim udah kejadian selagi kita nunggu response
+              // di atas, statusData ini basi -- jangan diterapin, langsung stop.
+              if (claimGeneration !== startGeneration) {
+                console.log('[KeySystem] Stale status response (claim happened meanwhile) - discarding');
+                closeVerifyingModal();
+                statusChecked = true;
+                handledReturnFromAds = true;
+                return;
+              }
+              
               if (statusData.success && statusData.verified) {
                 console.log('[KeySystem] ✓ VERIFIED - All checkpoints completed!');
                 pendingToken = pending.token;
@@ -927,6 +960,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 
                 // Load state lalu show success alert
                 await refreshState();
+                if (claimGeneration !== startGeneration) { closeVerifyingModal(); return; } // stale, bail after refreshState too
                 closeVerifyingModal();
                 showAlert('success', 'All Checkpoints Completed!', 'Verification successful! You can now claim your key.');
                 statusChecked = true;
@@ -946,6 +980,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 render();
                 
                 await refreshState();
+                if (claimGeneration !== startGeneration) { closeVerifyingModal(); return; } // stale, bail
                 closeVerifyingModal();
                 showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
                 statusChecked = true;
@@ -997,8 +1032,19 @@ window.JinHubKeySystem.init = function(slug, cfg){
         return; // Don't run normal flow if already handled
       }
       
+      // BUG FIX: snapshot generation sebelum refreshState()/apiGet() jalan.
+      // Ini nutup skenario persis kayak di screenshot: user reload/buka page
+      // yang masih punya `pending` (session lama, misal 2/2 verified) di
+      // localStorage, terus user LANGSUNG klik Get a New Key/Renew/+Xh
+      // sebelum block ini (yang delay 300ms) sempet kelar fetch status-nya.
+      // claimKey() udah reset ke 0/2, tapi block ini nyusul beres dan nimpa
+      // BALIK currentCheckpoint pakai data server yang basi (punya session
+      // token LAMA) -- makanya progress keliatan gak reset padahal udah claim.
+      const startGeneration = claimGeneration;
+      
       refreshState().then(async function(){
         if(!pending || !pending.token) return;
+        if(claimGeneration !== startGeneration) { console.log('[KeySystem] Stale normal-flow refresh (claim happened) - discarding'); return; }
       
       // Cek apakah checkpoint lama masih relevan
       if(state.totalKeys >= 3){
@@ -1008,6 +1054,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
 
       try{
         const data = await apiGet('/status?token=' + encodeURIComponent(pending.token));
+        if(claimGeneration !== startGeneration) { console.log('[KeySystem] Stale normal-flow status (claim happened) - discarding'); return; }
         if(data.success && data.verified){
           pendingToken = pending.token;
           checkpointVerified = true;
