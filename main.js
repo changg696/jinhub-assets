@@ -924,7 +924,16 @@ window.JinHubKeySystem.init = function(slug, cfg){
         // SHOW MODAL IMMEDIATELY (bahkan sebelum cek pending token)
         // Biar user PASTI lihat "Verification in progress"
         const modalCheckpointNum = Math.min((pending && pending.checkpointCount || 0) + 1, requiredCheckpoints || TOTAL_CHECKPOINTS);
-        showVerifyingModal(modalCheckpointNum, requiredCheckpoints || TOTAL_CHECKPOINTS);
+        
+        console.log('[DEBUG-BEFORE] About to call showVerifyingModal, function exists?', typeof showVerifyingModal);
+        console.log('[DEBUG-BEFORE] modalCheckpointNum:', modalCheckpointNum, 'requiredCheckpoints:', requiredCheckpoints || TOTAL_CHECKPOINTS);
+        
+        try {
+          showVerifyingModal(modalCheckpointNum, requiredCheckpoints || TOTAL_CHECKPOINTS);
+          console.log('[DEBUG-AFTER] showVerifyingModal call completed');
+        } catch(err) {
+          console.error('[DEBUG-ERROR] showVerifyingModal threw error:', err);
+        }
         
         // Kalau ada pending token, cek status langsung DENGAN PRIORITAS TINGGI
         if (pending && pending.token) {
