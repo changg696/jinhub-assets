@@ -283,22 +283,17 @@ window.JinHubKeySystem.init = function(slug, cfg){
       state.keys.forEach((keyData, index) => {
         const row = index === 0 ? el.row : el.row.cloneNode(true);
         const isActive = keyData.expiresAt && keyData.expiresAt > Date.now();
-        const capH = 28; // STREAK_CAP_HOURS
-        const baseH = 14; // BASE_HOURS untuk provider ini (bisa dikasih dari state.baseHours kalau perlu)
+        const capH = 28; // STREAK_CAP_HOURS (max 28h)
+        const baseH = 14; // BASE_HOURS
         const grantedMin = keyData.grantedMin != null ? keyData.grantedMin : (baseH * 60);
-        const nextBonusMin = Math.min(14 * 60, Math.max(0, capH * 60 - grantedMin)); // STREAK_BONUS_MIN
         
-        // FITUR BARU: Key yang pernah max (28h) tapi turun di bawah 10 jam bisa di-extend lagi
-        // Logic: Kalau time left < 10h DAN pernah dapat granted time (grantedMin > base), reset streak
+        // NEW LOGIC: Button "+14h" muncul kalau time left < 14h
+        // Button "Max" muncul kalau time left >= 14h (atau grantedMin >= 14h * 60)
         const timeLeftMs = isActive ? (keyData.expiresAt - Date.now()) : 0;
         const timeLeftH = timeLeftMs / 3600000; // convert to hours
-        const wasMaxedBefore = grantedMin >= (capH * 60); // pernah mencapai 28h
-        const canReExtend = wasMaxedBefore && timeLeftH < 10; // bisa extend lagi kalau turun < 10h
         
-        // Recalculate nextBonusMin untuk key yang bisa re-extend
-        const effectiveGrantedMin = canReExtend ? (baseH * 60) : grantedMin; // reset ke base kalau re-extend
-        const effectiveNextBonus = Math.min(14 * 60, Math.max(0, capH * 60 - effectiveGrantedMin));
-        const capped = isActive && effectiveNextBonus <= 0 && !canReExtend;
+        // Capped = key udah >= 14h (time left) atau grantedMin >= 14h (840 min)
+        const capped = isActive && (timeLeftH >= 14 || grantedMin >= 14 * 60);
         
         row.hidden = false;
         row.querySelector('[data-pk-key-text]').textContent = keyData.key;
@@ -319,11 +314,9 @@ window.JinHubKeySystem.init = function(slug, cfg){
         const renewLabel = row.querySelector('[data-pk-renew-label]');
         
         if(isActive){
-          // Key aktif -> tombol "+Xh" (add time / extend)
+          // Key aktif -> tombol "+14h" (kalau < 14h) atau "Max" (kalau >= 14h)
           renewIcon.innerHTML = ADDTIME_ICON;
-          renewLabel.textContent = capped ? 'Max' : fmtBonus(effectiveNextBonus);
-          // PENTING: Disable kalau TIDAK ADA checkpoint verified (locked juga disable)
-          // locked = user sudah 3 keys, gak boleh extend key manapun kecuali ada verified checkpoint
+          renewLabel.textContent = capped ? 'Max' : '+14h';
           renewBtn.disabled = !checkpointVerified || claiming || capped || locked;
           renewBtn.classList.toggle('is-solid', checkpointVerified && !capped && !locked);
           renewBtn.classList.toggle('is-capped', capped);
