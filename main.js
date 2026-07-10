@@ -212,17 +212,16 @@ window.JinHubKeySystem.init = function(slug, cfg){
     const hasExpiredKeys = state.expiredKeys && state.expiredKeys.length > 0;
     const hasAnyKey = state.keys && state.keys.length > 0;
     
-    // LOCKED = user sudah 3 keys DAN semua keys AKTIF sudah MAX (28h)
-    // Kalau ada expired keys atau key aktif yang belum max, masih boleh checkpoint
+    // LOCKED = user sudah 3 keys DAN semua keys sudah MAX (28h)
+    // Kalau ada key yang belum max, masih boleh checkpoint untuk extend key itu
     const capH = 28;
-    const allActiveKeysMaxed = state.keys && state.keys.length >= 3 && state.keys.every(k => {
+    const allKeysMaxed = state.keys && state.keys.length >= 3 && state.keys.every(k => {
       const isActive = k.expiresAt && k.expiresAt > Date.now();
-      if (!isActive) return true; // expired key = ignored (masih bisa di-renew)
+      if (!isActive) return false; // expired key = belum max
       const grantedMin = k.grantedMin != null ? k.grantedMin : 0;
       return grantedMin >= (capH * 60); // 28h in minutes
     });
-    // HANYA lock kalau user punya 3 keys, tidak ada expired keys, dan semua active keys sudah max
-    const locked = state.remaining <= 0 && !hasExpiredKeys && allActiveKeysMaxed;
+    const locked = state.remaining <= 0 && allKeysMaxed;
     
     const cooldownMs = getCooldownMs();
     const inCooldown = cooldownMs > 0;
