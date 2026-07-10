@@ -203,16 +203,17 @@ window.JinHubKeySystem.init = function(slug, cfg){
     const hasExpiredKeys = state.expiredKeys && state.expiredKeys.length > 0;
     const hasAnyKey = state.keys && state.keys.length > 0;
     
-    // LOCKED = user sudah 3 keys DAN semua keys sudah MAX (28h)
-    // Kalau ada key yang belum max, masih boleh checkpoint untuk extend key itu
+    // LOCKED = user sudah 3 keys DAN semua keys AKTIF sudah MAX (28h)
+    // Kalau ada expired keys atau key aktif yang belum max, masih boleh checkpoint
     const capH = 28;
-    const allKeysMaxed = state.keys && state.keys.length >= 3 && state.keys.every(k => {
+    const allActiveKeysMaxed = state.keys && state.keys.length >= 3 && state.keys.every(k => {
       const isActive = k.expiresAt && k.expiresAt > Date.now();
-      if (!isActive) return false; // expired key = belum max
+      if (!isActive) return true; // expired key = ignored (masih bisa di-renew)
       const grantedMin = k.grantedMin != null ? k.grantedMin : 0;
       return grantedMin >= (capH * 60); // 28h in minutes
     });
-    const locked = state.remaining <= 0 && allKeysMaxed;
+    // HANYA lock kalau user punya 3 keys, tidak ada expired keys, dan semua active keys sudah max
+    const locked = state.remaining <= 0 && !hasExpiredKeys && allActiveKeysMaxed;
     
     const cooldownMs = getCooldownMs();
     const inCooldown = cooldownMs > 0;
@@ -349,7 +350,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
     }
 
     if(locked){
-      showNote('All 3 keys have reached maximum time (28h each). Come back later when time drops below 10 hours to extend again.');
+      showNote('All 3 keys have reached maximum time (28h each) and are still active. Come back when they expire or drop below 10 hours to extend/renew.');
     } else if(readyToClaimNew){
       const hasExpired = state.expiredKeys && state.expiredKeys.length > 0;
       showNote(hasExpired
