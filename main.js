@@ -167,58 +167,59 @@ window.JinHubKeySystem.init = function(slug, cfg){
     el.note.hidden = false;
   }
 
-  // Custom Modal System (modern, no SweetAlert2 dependency)
+  // Custom Modal System (modern, clean design)
   function showAlert(type, title, text){
     // Remove existing modal if any
-    const existing = document.querySelector('.jh-modal-overlay');
+    const existing = document.querySelector('[data-jh-modal]');
     if(existing) existing.remove();
     
+    // Icons for different types
     const icons = {
-      success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
-      error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
-      warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
-      info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>',
-      loading: '<svg class="jh-spinner" viewBox="0 0 24 24" fill="none"><circle class="jh-spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/></svg>'
+      success: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #22c55e;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" d="M8 12l3 3l5 -5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="14;0"/></path></g></svg>',
+      error: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #ef4444;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M12 12l4 4M12 12l-4 -4M12 12l4 -4M12 12l-4 4"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="8;0"/></path></g></svg>',
+      warning: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #f59e0b;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 7v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="6;0"/></path><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.95s" dur="0.2s" values="0;1"/></circle></g></svg>',
+      info: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #3b82f6;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><circle cx="12" cy="8" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.75s" dur="0.2s" values="0;1"/></circle><path stroke-dasharray="10" stroke-dashoffset="10" d="M12 11v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="10;0"/></path></g></svg>'
     };
     
-    const iconColors = {
-      success: '#10b981',
-      error: '#ef4444',
-      warning: '#f59e0b',
-      info: '#3b82f6',
-      loading: '#3b82f6'
-    };
-    
-    // Create modal HTML
+    // Create overlay
     const overlay = document.createElement('div');
-    overlay.className = 'jh-modal-overlay jh-modal-fade-in';
-    // Force z-index inline to ensure visibility
-    overlay.style.cssText = 'position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;';
-    overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
-      '<div class="jh-modal-icon" style="color: ' + (iconColors[type] || iconColors.info) + '">' +
-        (icons[type] || icons.info) +
-      '</div>' +
-      '<h2 class="jh-modal-title">' + title + '</h2>' +
-      '<p class="jh-modal-text">' + text + '</p>' +
+    overlay.setAttribute('data-jh-modal', 'true');
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(8px); animation: fadeIn 0.2s ease; padding: 1rem;';
+    
+    // Create modal with your design
+    const modal = document.createElement('div');
+    modal.style.cssText = 'width: 272px; background: rgba(13, 13, 15, 1); border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.08); padding: 1.1rem 1.2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.6); font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
+    
+    modal.innerHTML = '<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px;">' +
+      '<h3 style="margin: 0; font-size: 14.5px; color: #f5f5f7; font-weight: 500;">' + title + '</h3>' +
+      '<button aria-label="Close" onclick="this.closest(\'[data-jh-modal]\').remove()" style="width: 20px; height: 20px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); border: none; flex-shrink: 0; margin-left: 8px; cursor: pointer;"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
+    '</div>' +
+    '<p style="font-size: 11px; color: #8a8a92; margin: 0 0 14px; line-height: 1.5;">' + text + '</p>' +
+    '<div style="display: flex; justify-content: center; margin-bottom: 8px;">' +
+      (icons[type] || icons.info) +
     '</div>';
     
+    overlay.appendChild(modal);
     document.body.appendChild(overlay);
     
-    // Auto-close after 2.5 seconds (except for loading type)
+    // Animate in
+    setTimeout(function(){
+      modal.style.transform = 'scale(1)';
+      modal.style.opacity = '1';
+    }, 10);
+    
+    // Auto-close after 2.5 seconds
     if(type !== 'loading'){
       setTimeout(function(){
-        overlay.classList.remove('jh-modal-fade-in');
-        overlay.classList.add('jh-modal-fade-out');
-        const modal = overlay.querySelector('.jh-modal');
-        if(modal){
-          modal.classList.remove('jh-modal-scale-in');
-          modal.classList.add('jh-modal-scale-out');
-        }
-        setTimeout(function(){ overlay.remove(); }, 200);
+        modal.style.transform = 'scale(0.9)';
+        modal.style.opacity = '0';
+        setTimeout(function(){ 
+          if(overlay.parentNode) overlay.remove(); 
+        }, 300);
       }, 2500);
     }
     
-    return overlay; // Return for manual control if needed
+    return overlay;
   }
 
   function render(){
