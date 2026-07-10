@@ -722,15 +722,38 @@ window.JinHubKeySystem.init = function(slug, cfg){
       showCopyModal(success);
     };
     
+    // Try modern clipboard API first
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(keyString).then(function(){
         done(true);
       }).catch(function(){
-        done(false);
+        // Fallback to execCommand if clipboard API fails (document not focused, etc)
+        fallbackCopy(keyString);
       });
     } else {
-      // Fallback untuk browser lama - anggap berhasil
-      done(true);
+      // Browser doesn't support clipboard API, use fallback
+      fallbackCopy(keyString);
+    }
+    
+    // Fallback copy method using textarea + execCommand
+    function fallbackCopy(text){
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        done(successful);
+      } catch(err) {
+        document.body.removeChild(textarea);
+        done(false);
+      }
     }
   }
 
