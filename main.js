@@ -227,11 +227,15 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // Popup muncul di tengah layar pas user balik dari ads, dengan loading
   // spinner dan progress checkpoint. Pure HTML/CSS/JS, gak pakai SweetAlert2.
   function showVerifyingModal(checkpointNum, totalCheckpoints){
+    console.log('[DEBUG] showVerifyingModal CALLED', checkpointNum, totalCheckpoints);
+    
     // Remove existing modal kalau ada (cleanup)
     closeVerifyingModal();
     
     const safeTotal = totalCheckpoints || 1;
     const safeCheckpoint = Math.max(1, Math.min(checkpointNum || 1, safeTotal));
+    
+    console.log('[DEBUG] Creating overlay element...');
     
     // Create modal overlay
     const overlay = document.createElement('div');
@@ -251,12 +255,18 @@ window.JinHubKeySystem.init = function(slug, cfg){
         '<button type="button" class="pk-verify-cancel-btn">Cancel</button>' +
       '</div>';
     
+    console.log('[DEBUG] Appending overlay to body...');
+    
     // Add to body
     document.body.appendChild(overlay);
     
+    console.log('[DEBUG] Overlay appended! ID:', overlay.id, 'Parent:', overlay.parentNode);
+    
     // Trigger animation (slight delay untuk smooth fade-in)
     setTimeout(function() {
+      console.log('[DEBUG] Adding pk-verify-visible class...');
       overlay.classList.add('pk-verify-visible');
+      console.log('[DEBUG] Classes:', overlay.className);
     }, 10);
     
     // Close handlers
@@ -269,6 +279,8 @@ window.JinHubKeySystem.init = function(slug, cfg){
     if (cancelBtn) {
       cancelBtn.addEventListener('click', closeVerifyingModal);
     }
+    
+    console.log('[DEBUG] showVerifyingModal COMPLETE');
   }
 
   // Update angka checkpoint di modal verifikasi yang lagi kebuka (kalau ada),
