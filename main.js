@@ -192,6 +192,8 @@ window.JinHubKeySystem.init = function(slug, cfg){
     // Create modal HTML
     const overlay = document.createElement('div');
     overlay.className = 'jh-modal-overlay jh-modal-fade-in';
+    // Force z-index inline to ensure visibility
+    overlay.style.cssText = 'position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;';
     overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
       '<div class="jh-modal-icon" style="color: ' + (iconColors[type] || iconColors.info) + '">' +
         (icons[type] || icons.info) +
@@ -685,6 +687,8 @@ window.JinHubKeySystem.init = function(slug, cfg){
       
       const overlay = document.createElement('div');
       overlay.className = 'jh-modal-overlay jh-modal-fade-in';
+      // Force z-index inline to ensure visibility
+      overlay.style.cssText = 'position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;';
       overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
         '<div class="jh-modal-icon" style="color: ' + iconColor + '">' +
           icon +
@@ -785,6 +789,8 @@ window.JinHubKeySystem.init = function(slug, cfg){
     const overlay = document.createElement('div');
     overlay.className = 'jh-modal-overlay jh-modal-fade-in';
     overlay.setAttribute('data-jh-verifying', 'true'); // Mark as verifying modal for easy reference
+    // Force z-index inline to ensure visibility
+    overlay.style.cssText = 'position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;';
     overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
       '<button class="jh-modal-close" onclick="this.closest(\'.jh-modal-overlay\').remove()">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
