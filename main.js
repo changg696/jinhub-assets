@@ -54,10 +54,19 @@ window.JinHubKeySystem.init = function(slug, cfg){
   (function restoreKeysCache(){
     const cached = loadKeysCache();
     if(!cached || !cached.keys || !cached.keys.length) return;
+    
+    // SKIP cache kalau ada expired keys di dalamnya (biar force refresh dari API)
+    // Ini handle kasus user manual edit KV (expiresAt = 0) tapi localStorage masih lama
+    const now = Date.now();
+    const hasExpiredInCache = cached.keys.some(k => k.expiresAt && k.expiresAt <= now);
+    if(hasExpiredInCache){
+      console.log('[KeySystem] Cache has expired keys, skipping cache restore (force fresh from API)');
+      return; // Skip cache, biar refreshState() fetch dari API langsung
+    }
+    
     state.keys = cached.keys;
     state.totalKeys = cached.totalKeys || cached.keys.length;
     state.remaining = cached.remaining != null ? cached.remaining : state.remaining;
-    const now = Date.now();
     state.activeKeys = state.keys.filter(k => k.expiresAt && k.expiresAt > now).map(k => k.key);
     state.expiredKeys = state.keys.filter(k => k.expiresAt && k.expiresAt <= now).map(k => k.key);
   })();
@@ -411,18 +420,19 @@ window.JinHubKeySystem.init = function(slug, cfg){
     try{
       const data = await apiGet('/state');
       if(data.success){
-        // Update state dari server HANYA jika berhasil
-        // JANGAN reset state sebelum dapat response - preserve cache
+        // IMPORTANT: API state is SOURCE OF TRUTH - overwrite cache completely!
+        // Don't merge with old cache, use fresh data from server
         state.keys = data.keys || [];
         state.totalKeys = data.totalKeys || 0;
         state.remaining = data.remaining || 0;
         state.lastClaimAt = data.lastClaimAt;
         
-        // Re-calculate activeKeys dan expiredKeys
+        // Re-calculate activeKeys dan expiredKeys from fresh server data
         const now = Date.now();
         state.activeKeys = state.keys.filter(k => k.expiresAt && k.expiresAt > now).map(k => k.key);
         state.expiredKeys = state.keys.filter(k => k.expiresAt && k.expiresAt <= now).map(k => k.key);
         
+        // Save to cache ONLY after getting fresh data from server
         saveKeysCache(state.keys, state.totalKeys, state.remaining);
         
         // RESTORE checkpoint state before render (prevent reset!)
