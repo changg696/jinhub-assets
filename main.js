@@ -330,12 +330,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
         const grantedMin = keyData.grantedMin != null ? keyData.grantedMin : (baseH * 60);
         
         // NEW LOGIC: Button "+14h" muncul kalau time left < 14h
-        // Button "Max" muncul kalau GRANTED MINUTES >= CAP (28h = 1680min)
+        // Button "Max" muncul kalau time left >= 14h
+        // Backend will auto-reset grantedMin if time left < 14h (infinite extend)
         const timeLeftMs = isActive ? (keyData.expiresAt - Date.now()) : 0;
         const timeLeftH = timeLeftMs / 3600000; // convert to hours
         
-        // Capped = TOTAL granted minutes >= CAP (28h), BUKAN cek time left!
-        const capped = isActive && grantedMin >= (capH * 60);
+        // Capped = time left >= 14h (user can extend when drops below 14h)
+        const capped = isActive && timeLeftH >= 14;
         
         row.hidden = false;
         row.querySelector('[data-pk-key-text]').textContent = keyData.key;
