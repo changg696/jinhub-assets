@@ -55,20 +55,18 @@ window.JinHubKeySystem.init = function(slug, cfg){
     const cached = loadKeysCache();
     if(!cached || !cached.keys || !cached.keys.length) return;
     
-    // SKIP cache kalau ada expired keys di dalamnya (biar force refresh dari API)
-    // Ini handle kasus user manual edit KV (expiresAt = 0) tapi localStorage masih lama
+    // NEW LOGIC: Always restore cache (don't skip if expired keys exist)
+    // This prevents "blank screen" on page load when one key expires
     const now = Date.now();
-    const hasExpiredInCache = cached.keys.some(k => k.expiresAt && k.expiresAt <= now);
-    if(hasExpiredInCache){
-      console.log('[KeySystem] Cache has expired keys, skipping cache restore (force fresh from API)');
-      return; // Skip cache, biar refreshState() fetch dari API langsung
-    }
     
     state.keys = cached.keys;
     state.totalKeys = cached.totalKeys || cached.keys.length;
     state.remaining = cached.remaining != null ? cached.remaining : state.remaining;
     state.activeKeys = state.keys.filter(k => k.expiresAt && k.expiresAt > now).map(k => k.key);
     state.expiredKeys = state.keys.filter(k => k.expiresAt && k.expiresAt <= now).map(k => k.key);
+    
+    console.log('[KeySystem] Cache restored:', state.activeKeys.length, 'active,', state.expiredKeys.length, 'expired');
+    render();
   })();
   let waiting = false;             // lagi nunggu checkpoint dikonfirmasi provider
   let checkpointVerified = false;  // checkpoint UDAH dikonfirmasi tapi user BELUM milih aksi
