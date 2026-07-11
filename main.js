@@ -143,12 +143,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
   }
   function saveKeysCache(keys, totalKeys, remaining){
     try{
-      localStorage.setItem(KEYS_CACHE_KEY, JSON.stringify({ 
-        keys: keys || [], 
-        totalKeys: totalKeys || 0, 
-        remaining: remaining,
-        syncedAt: Date.now() // Timestamp saat data terakhir di-sync dari server
-      }));
+      localStorage.setItem(KEYS_CACHE_KEY, JSON.stringify({ keys: keys || [], totalKeys: totalKeys || 0, remaining: remaining }));
     }catch(e){}
   }
 
@@ -172,44 +167,86 @@ window.JinHubKeySystem.init = function(slug, cfg){
     el.note.hidden = false;
   }
 
-  // SweetAlert2 notification helper
-  function showAlert(type, title, text){
-    if(!window.Swal) return; // Fallback kalau SweetAlert2 belum load
+  // Custom Modal System - New Design (from success_modal.html)
+  function showAlert(type, title, text, options){
+    // Remove existing modal if any
+    const existing = document.querySelector('[data-jh-modal]');
+    if(existing) existing.remove();
     
+    // Icons for different types (animated SVG)
     const icons = {
-      success: 'success',
-      error: 'error',
-      warning: 'warning',
-      info: 'info'
+      success: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #22c55e;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" d="M8 12l3 3l5 -5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="14;0"/></path></g></svg>',
+      error: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #ef4444;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M12 12l4 4M12 12l-4 -4M12 12l4 -4M12 12l-4 4"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="8;0"/></path></g></svg>',
+      warning: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #f59e0b;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 7v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="6;0"/></path><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.95s" dur="0.2s" values="0;1"/></circle></g></svg>',
+      info: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #3b82f6;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><circle cx="12" cy="8" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.75s" dur="0.2s" values="0;1"/></circle><path stroke-dasharray="10" stroke-dashoffset="10" d="M12 11v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="10;0"/></path></g></svg>',
+      loading: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #7c6bf0;"><g stroke="currentColor"><circle cx="12" cy="12" r="9.5" fill="none" stroke-linecap="round" stroke-width="3"><animate attributeName="stroke-dasharray" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0 150;42 150;42 150;42 150"/><animate attributeName="stroke-dashoffset" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0;-16;-59;-59"/></circle><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></g></svg>'
     };
     
-    Swal.fire({
-      icon: icons[type] || 'info',
-      title: title,
-      text: text,
-      showConfirmButton: false, // Hilangkan tombol OK
-      timer: 2500, // Auto-close setelah 2.5 detik
-      timerProgressBar: false, // MATIKAN progress bar biar clean
-      background: '#1a1a2e',
-      color: '#ffffff',
-      toast: false, // Popup centered (bukan toast di pojok)
-      position: 'center',
-      customClass: {
-        popup: 'swal-jinhub-popup',
-        icon: 'swal-jinhub-icon',
-        title: 'swal-jinhub-title',
-        htmlContainer: 'swal-jinhub-text'
-      },
-      didOpen: (popup) => {
-        // Tambahkan animasi smooth
-        popup.style.animation = 'swal-show 0.3s ease-out';
-      },
-      willClose: () => {
-        // Animasi saat close
-        const popup = Swal.getPopup();
-        if(popup) popup.style.animation = 'swal-hide 0.2s ease-in';
+    options = options || {};
+    const showProgress = options.showProgress || false;
+    const progressCurrent = options.progressCurrent || 0;
+    const progressTotal = options.progressTotal || 0;
+    
+    // Create overlay (backdrop)
+    const overlay = document.createElement('div');
+    overlay.setAttribute('data-jh-modal', 'true');
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(8px); padding: 1rem;';
+    
+    // Create modal container (NEW DESIGN from success_modal.html)
+    const modal = document.createElement('div');
+    modal.style.cssText = 'width: 272px; background: rgba(13, 13, 15, 1); border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.08); padding: 1.1rem 1.2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.6); font-family: Geist, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
+    
+    // Build modal HTML (matching success_modal.html structure)
+    let progressHTML = '';
+    if(showProgress && progressTotal > 0){
+      let progressBars = '';
+      for(let i = 0; i < progressTotal; i++){
+        progressBars += '<div style="width: 18px; height: 3px; border-radius: 2px; background: ' + (i < progressCurrent ? '#7c6bf0' : 'rgba(124, 107, 240, 0.2)') + ';"></div>';
       }
-    });
+      progressHTML = '<div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 12px;">' +
+        progressBars +
+        '<span style="font-size: 10px; color: #8a8a92; margin-left: 5px;">' + progressCurrent + ' / ' + progressTotal + '</span>' +
+      '</div>';
+    }
+    
+    modal.innerHTML = 
+      '<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px;">' +
+        '<h3 style="margin: 0; font-size: 14.5px; color: #f5f5f7; font-weight: 500;">' + title + '</h3>' +
+        '<button aria-label="Close" onclick="this.closest(\'[data-jh-modal]\').remove()" style="width: 20px; height: 20px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); border: none; flex-shrink: 0; margin-left: 8px; cursor: pointer;"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
+      '</div>' +
+      '<p style="font-size: 11px; color: #8a8a92; margin: 0 0 14px; line-height: 1.5;">' + text + '</p>' +
+      progressHTML +
+      '<div style="display: flex; justify-content: center; margin-bottom: ' + (showProgress ? '12px' : '8px') + ';">' +
+        (icons[type] || icons.info) +
+      '</div>';
+    
+    // Add bottom text if checkpoint verified (matching success_modal.html)
+    if(type === 'success' && showProgress){
+      modal.innerHTML += '<p style="text-align: center; font-weight: 500; font-size: 12.5px; margin: 0 0 4px; color: #f5f5f7;">All tasks verified</p>' +
+        '<p style="text-align: center; font-size: 10.5px; color: #8a8a92; margin: 0; line-height: 1.5;">The provider has confirmed your completed tasks successfully.</p>';
+    }
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Animate in (scale + fade)
+    setTimeout(function(){
+      modal.style.transform = 'scale(1)';
+      modal.style.opacity = '1';
+    }, 10);
+    
+    // Auto-close after 2.5 seconds (except loading type)
+    if(type !== 'loading'){
+      setTimeout(function(){
+        modal.style.transform = 'scale(0.9)';
+        modal.style.opacity = '0';
+        setTimeout(function(){ 
+          if(overlay.parentNode) overlay.remove(); 
+        }, 300);
+      }, 2500);
+    }
+    
+    return overlay;
   }
 
   function render(){
@@ -292,13 +329,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
         const baseH = 14; // BASE_HOURS
         const grantedMin = keyData.grantedMin != null ? keyData.grantedMin : (baseH * 60);
         
-        // FIX: Cek apakah TOTAL granted time sudah >= 28h, BUKAN time left
-        // grantedMin adalah total waktu yang pernah diberikan ke key ini (base 14h + bonus dari checkpoint)
-        const totalGrantedH = grantedMin / 60; // convert minutes to hours
-        const capped = isActive && totalGrantedH >= capH; // Sudah dikasih 28h atau lebih
-        
+        // NEW LOGIC: Button "+14h" muncul kalau time left < 14h
+        // Button "Max" muncul kalau GRANTED MINUTES >= CAP (28h = 1680min)
         const timeLeftMs = isActive ? (keyData.expiresAt - Date.now()) : 0;
         const timeLeftH = timeLeftMs / 3600000; // convert to hours
+        
+        // Capped = TOTAL granted minutes >= CAP (28h), BUKAN cek time left!
+        const capped = isActive && grantedMin >= (capH * 60);
         
         row.hidden = false;
         row.querySelector('[data-pk-key-text]').textContent = keyData.key;
@@ -319,13 +356,9 @@ window.JinHubKeySystem.init = function(slug, cfg){
         const renewLabel = row.querySelector('[data-pk-renew-label]');
         
         if(isActive){
-          // Key aktif -> tombol "+14h" atau "Max"
-          // Tampilkan "+Xh" (sisa bonus yang bisa ditambah) atau "Max" jika sudah cap
-          const remainingBonusH = Math.max(0, capH - totalGrantedH);
-          const displayLabel = capped ? 'Max' : (remainingBonusH > 0 ? '+' + Math.floor(remainingBonusH) + 'h' : 'Max');
-          
+          // Key aktif -> tombol "+14h" (kalau < 14h) atau "Max" (kalau >= 14h)
           renewIcon.innerHTML = ADDTIME_ICON;
-          renewLabel.textContent = displayLabel;
+          renewLabel.textContent = capped ? 'Max' : '+14h';
           renewBtn.disabled = !checkpointVerified || claiming || capped || locked;
           renewBtn.classList.toggle('is-solid', checkpointVerified && !capped && !locked);
           renewBtn.classList.toggle('is-capped', capped);
@@ -411,7 +444,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
     }
   }
 
-  async function refreshState(retryCount = 0){
+  async function refreshState(){
     isRefreshingState = true;
     // PRESERVE checkpoint progress before refresh (don't let it reset!)
     const preservedCheckpoint = currentCheckpoint;
@@ -442,28 +475,10 @@ window.JinHubKeySystem.init = function(slug, cfg){
         checkpointVerified = preservedVerified;
         
         render();
-      } else {
-        // API response tapi data tidak success - mungkin KV belum ready
-        throw new Error('API returned unsuccessful response');
       }
+      // Kalau API gagal, JANGAN ubah state sama sekali - biar pakai cache lama
     }catch(e){ 
-      console.warn('[KeySystem] refreshState failed (attempt ' + (retryCount + 1) + '):', e);
-      
-      // Retry mechanism untuk mengatasi eventual consistency KV
-      // Max 3 retry dengan exponential backoff (2s, 5s, 10s)
-      if(retryCount < 3){
-        const delays = [2000, 5000, 10000];
-        const delay = delays[retryCount];
-        console.log('[KeySystem] Retrying in ' + (delay/1000) + 's...');
-        
-        setTimeout(() => {
-          refreshState(retryCount + 1);
-        }, delay);
-      } else {
-        // Setelah 3 retry masih gagal, tampilkan pesan ke user
-        console.error('[KeySystem] Failed to fetch keys after 3 retries. Keys might appear after KV propagation (up to 60 minutes).');
-        showAlert('info', 'Loading Keys...', 'Your keys are being loaded. If they don\'t appear, please refresh the page in a few minutes.');
-      }
+      console.warn('[KeySystem] refreshState failed, keeping cached data:', e);
       // Tetap render dengan data cache yang ada (state tidak diubah)
     } finally {
       isRefreshingState = false;
@@ -504,7 +519,11 @@ window.JinHubKeySystem.init = function(slug, cfg){
           pendingToken = token;
           savePending(token, true, currentCheckpoint, requiredCheckpoints);
           
-          showAlert('success', 'All Checkpoints Completed!', 'All ' + requiredCheckpoints + ' checkpoints verified! You can now claim your key.');
+          showAlert('success', 'Verification complete', 'All done. You can now claim your key.', {
+            showProgress: true,
+            progressCurrent: requiredCheckpoints,
+            progressTotal: requiredCheckpoints
+          });
           render();
           return;
         } else if(currentCheckpoint > 0 && currentCheckpoint < requiredCheckpoints){
@@ -685,59 +704,93 @@ window.JinHubKeySystem.init = function(slug, cfg){
   function copyKey(keyString){
     if(!keyString) return;
     
-    const showToast = function(success){
-      if(!window.Swal) return; // Fallback kalau SweetAlert2 belum load
+    const showCopyModal = function(success){
+      // Remove existing modal if any
+      const existing = document.querySelector('[data-jh-copy-modal]');
+      if(existing) existing.remove();
       
-      Swal.mixin({
-        toast: true,
-        position: "bottom", // Muncul di bawah card key
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        backdrop: false, // DISABLE backdrop (no overlay hitam)
-        showClass: {
-          backdrop: 'swal2-noanimation' // No animation untuk backdrop
-        },
-        hideClass: {
-          backdrop: 'swal2-noanimation'
-        },
-        didOpen: (toast) => {
-          toast.onmouseenter = Swal.stopTimer;
-          toast.onmouseleave = Swal.resumeTimer;
-        },
-        background: '#1a1a2e',
-        color: '#ffffff',
-        customClass: {
-          popup: 'swal-jinhub-toast swal-jinhub-toast-bottom',
-          icon: 'swal-jinhub-toast-icon',
-          title: 'swal-jinhub-toast-title',
-          container: 'swal-jinhub-toast-container' // Custom container class
-        }
-      }).fire({
-        icon: success ? "success" : "error",
-        title: success ? "Key copied to clipboard!" : "Failed to copy key"
-      });
+      const iconSvg = success 
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><path d="M20 6L9 17l-5-5"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+      
+      const iconColor = success ? '#10b981' : '#ef4444';
+      const title = success ? 'Copied!' : 'Copy Failed';
+      const text = success ? 'Key copied to clipboard successfully' : 'Failed to copy key';
+      
+      // Create overlay with FULL inline styles
+      const overlay = document.createElement('div');
+      overlay.setAttribute('data-jh-copy-modal', 'true');
+      overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); animation: fadeIn 0.2s ease;';
+      
+      // Create modal with FULL inline styles
+      const modal = document.createElement('div');
+      modal.style.cssText = 'background: linear-gradient(145deg, #1a1a2e, #16192b); border-radius: 20px; padding: 40px 32px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 400px; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
+      
+      modal.innerHTML = '<div style="width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; background: rgba(' + (success ? '16, 185, 129' : '239, 68, 68') + ', 0.1); display: flex; align-items: center; justify-content: center; color: ' + iconColor + ';">' + iconSvg + '</div>' +
+        '<h2 style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 0 0 8px; font-family: Space Grotesk, sans-serif;">' + title + '</h2>' +
+        '<p style="font-size: 15px; color: rgba(255,255,255,0.8); margin: 0; font-family: Space Grotesk, sans-serif; line-height: 1.5;">' + text + '</p>';
+      
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      
+      // Animate in
+      setTimeout(function(){
+        modal.style.transform = 'scale(1)';
+        modal.style.opacity = '1';
+      }, 10);
+      
+      // Auto-close after 2 seconds
+      setTimeout(function(){
+        modal.style.transform = 'scale(0.9)';
+        modal.style.opacity = '0';
+        setTimeout(function(){ 
+          if(overlay.parentNode) overlay.remove(); 
+        }, 200);
+      }, 2000);
     };
     
     const done = function(success){
       const allCopyBtns = document.querySelectorAll('[data-pk-copy]');
-      allCopyBtns.forEach(btn => btn.classList.add('is-copied'));
+      allCopyBtns.forEach(function(btn){ btn.classList.add('is-copied'); });
       window.setTimeout(function(){
-        allCopyBtns.forEach(btn => btn.classList.remove('is-copied'));
+        allCopyBtns.forEach(function(btn){ btn.classList.remove('is-copied'); });
       }, 1400);
       
-      showToast(success);
+      showCopyModal(success);
     };
     
+    // Try modern clipboard API first
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(keyString).then(function(){
         done(true);
       }).catch(function(){
-        done(false);
+        // Fallback to execCommand if clipboard API fails (document not focused, etc)
+        fallbackCopy(keyString);
       });
     } else {
-      // Fallback untuk browser lama - anggap berhasil
-      done(true);
+      // Browser doesn't support clipboard API, use fallback
+      fallbackCopy(keyString);
+    }
+    
+    // Fallback copy method using textarea + execCommand
+    function fallbackCopy(text){
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        done(successful);
+      } catch(err) {
+        document.body.removeChild(textarea);
+        done(false);
+      }
     }
   }
 
@@ -787,28 +840,38 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // pas halaman baru kebuka/reload.
   render();
 
-  // Toast KECIL non-blocking buat status "lagi ngecek checkpoint" -- ini
-  // BUKAN showAlert() yang bikin popup di tengah layar. Popup di tengah
-  // yang nutupin 2.5 detik itu yang bikin progress bar di baliknya
-  // (yang sebenernya udah bener duluan) berasa "telat muncul".
-  function showCheckingToast(){
-    if(!window.Swal) return;
-    Swal.mixin({
-      toast: true,
-      position: 'bottom', // Muncul di bawah kayak notif copy key
-      showConfirmButton: false,
-      timer: 4000,
-      timerProgressBar: true,
-      backdrop: false,
-      background: '#1a1a2e',
-      color: '#ffffff',
-      customClass: {
-        popup: 'swal-jinhub-toast swal-jinhub-toast-bottom', // Sama kayak copy key toast
-        icon: 'swal-jinhub-toast-icon',
-        title: 'swal-jinhub-toast-title',
-        container: 'swal-jinhub-toast-container' // Custom container class
-      }
-    }).fire({ icon: 'info', title: 'Checking progress...' });
+  // Show "Verifying tasks..." modal (with spinner, like in screenshot)
+  function showVerifyingModal(){
+    // Remove existing modal if any
+    const existing = document.querySelector('.jh-modal-overlay');
+    if(existing) existing.remove();
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'jh-modal-overlay jh-modal-fade-in';
+    overlay.setAttribute('data-jh-verifying', 'true'); // Mark as verifying modal for easy reference
+    // Force z-index inline to ensure visibility
+    overlay.style.cssText = 'position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;';
+    overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
+      '<button class="jh-modal-close" onclick="this.closest(\'.jh-modal-overlay\').remove()">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+      '</button>' +
+      '<h2 class="jh-modal-title">Verification in progress</h2>' +
+      '<p class="jh-modal-subtitle">Keep this tab open. The key flow will finish here.</p>' +
+      '<div class="jh-modal-checkpoint-progress">' +
+        '<span>CHECKPOINT 1 / 1</span>' +
+      '</div>' +
+      '<div class="jh-modal-icon jh-modal-spinner" style="color: #3b82f6">' +
+        '<svg class="jh-spinner" viewBox="0 0 24 24" fill="none">' +
+          '<circle class="jh-spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>' +
+        '</svg>' +
+      '</div>' +
+      '<h3 class="jh-modal-verifying-title">Verifying tasks...</h3>' +
+      '<p class="jh-modal-verifying-text">Waiting for LootLabs to confirm your completed tasks. This takes a few seconds.</p>' +
+      '<button class="jh-modal-cancel" onclick="this.closest(\'.jh-modal-overlay\').remove()">Cancel</button>' +
+    '</div>';
+    
+    document.body.appendChild(overlay);
+    return overlay;
   }
   
   // CEK APAKAH BARU BALIK DARI ADS (single-tab flow)
@@ -826,10 +889,8 @@ window.JinHubKeySystem.init = function(slug, cfg){
         // User baru balik dari ads redirect - cleanup localStorage
         localStorage.removeItem(returnUrlKey);
         
-        // IMMEDIATE UI FEEDBACK - toast kecil non-blocking (bukan popup
-        // center) biar gak nutupin progress bar yang udah ke-restore bener
-        // dari localStorage di baris atas tadi.
-        showCheckingToast();
+        // IMMEDIATE UI FEEDBACK - show "Verifying tasks..." modal
+        const verifyingModal = showVerifyingModal();
         
         // Kalau ada pending token, cek status langsung DENGAN PRIORITAS TINGGI
         if (pending && pending.token) {
@@ -852,9 +913,18 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 // INSTANT UI UPDATE before state refresh
                 render();
                 
-                // Load state lalu show success alert
+                // Load state
                 await refreshState();
-                showAlert('success', 'All Checkpoints Completed!', 'Verification successful! You can now claim your key.');
+                
+                // Close verifying modal first
+                if(verifyingModal) verifyingModal.remove();
+                
+                // Show success alert
+                showAlert('success', 'Verification complete', 'All done. You can now claim your key.', {
+                  showProgress: true,
+                  progressCurrent: requiredCheckpoints,
+                  progressTotal: requiredCheckpoints
+                });
                 statusChecked = true;
                 handledReturnFromAds = true; // Mark as handled to skip normal flow
                 return; // Success - exit early
@@ -872,13 +942,26 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 render();
                 
                 await refreshState();
-                showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
+                
+                // Close verifying modal first
+                if(verifyingModal) verifyingModal.remove();
+                
+                // Show success alert
+                showAlert('info', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints, 'Press START again to continue the next checkpoint.', {
+                  showProgress: true,
+                  progressCurrent: currentCheckpoint,
+                  progressTotal: requiredCheckpoints
+                });
                 statusChecked = true;
                 handledReturnFromAds = true; // Mark as handled to skip normal flow
                 return; // Success - exit early
                 
               } else if (statusData.code === 'EXPIRED' || !statusData.success) {
                 console.log('[KeySystem] ✗ Session expired/invalid');
+                
+                // Close verifying modal first
+                if(verifyingModal) verifyingModal.remove();
+                
                 clearPending();
                 showAlert('warning', 'Session Expired', 'Your checkpoint session has expired. Please press START again.');
                 statusChecked = true;
@@ -919,19 +1002,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
         return; // Don't run normal flow if already handled
       }
       
-      // Show subtle loading indicator jika ada cached keys yang mungkin stale
-      const cache = loadKeysCache();
-      const cacheAge = cache && cache.syncedAt ? Date.now() - cache.syncedAt : Infinity;
-      const cacheIsStale = cacheAge > (5 * 60 * 1000); // > 5 menit = stale
-      
-      if(cacheIsStale && cache && cache.keys && cache.keys.length > 0){
-        console.log('[KeySystem] Cache is stale (age: ' + Math.round(cacheAge/1000) + 's), refreshing from server...');
-        showNote('Syncing keys from server...');
-      }
-      
       refreshState().then(async function(){
-        showNote(null); // Clear loading note
-        
         if(!pending || !pending.token) return;
       
       // Cek apakah checkpoint lama masih relevan
@@ -967,34 +1038,6 @@ window.JinHubKeySystem.init = function(slug, cfg){
     });
   }, 300); // 300ms delay to let cached UI show first
   })();
-  
-  // ===== PERIODIC BACKGROUND SYNC =====
-  // Auto-refresh keys setiap 2 menit untuk mengatasi KV eventual consistency
-  // dan memastikan user selalu melihat data terbaru tanpa perlu manual refresh
-  let backgroundSyncTimer = null;
-  function startBackgroundSync(){
-    // Clear existing timer jika ada
-    if(backgroundSyncTimer) clearInterval(backgroundSyncTimer);
-    
-    // Sync setiap 2 menit (120000ms)
-    backgroundSyncTimer = setInterval(() => {
-      // Hanya sync jika user tidak sedang dalam proses checkpoint/claiming
-      if(!waiting && !claiming && !starting && !isRefreshingState){
-        console.log('[KeySystem] Background sync: refreshing keys from server...');
-        refreshState().catch(e => {
-          console.warn('[KeySystem] Background sync failed:', e);
-        });
-      }
-    }, 120000); // 2 menit
-  }
-  
-  // Mulai background sync
-  startBackgroundSync();
-  
-  // Cleanup saat tab ditutup/navigate away
-  window.addEventListener('beforeunload', () => {
-    if(backgroundSyncTimer) clearInterval(backgroundSyncTimer);
-  });
 };
 
 
