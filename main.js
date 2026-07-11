@@ -167,48 +167,75 @@ window.JinHubKeySystem.init = function(slug, cfg){
     el.note.hidden = false;
   }
 
-  // Custom Modal System (modern, clean design)
-  function showAlert(type, title, text){
+  // Custom Modal System - New Design (from success_modal.html)
+  function showAlert(type, title, text, options){
     // Remove existing modal if any
     const existing = document.querySelector('[data-jh-modal]');
     if(existing) existing.remove();
     
-    // Icons for different types
+    // Icons for different types (animated SVG)
     const icons = {
       success: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #22c55e;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" d="M8 12l3 3l5 -5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="14;0"/></path></g></svg>',
       error: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #ef4444;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M12 12l4 4M12 12l-4 -4M12 12l4 -4M12 12l-4 4"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="8;0"/></path></g></svg>',
       warning: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #f59e0b;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 7v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="6;0"/></path><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.95s" dur="0.2s" values="0;1"/></circle></g></svg>',
-      info: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #3b82f6;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><circle cx="12" cy="8" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.75s" dur="0.2s" values="0;1"/></circle><path stroke-dasharray="10" stroke-dashoffset="10" d="M12 11v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="10;0"/></path></g></svg>'
+      info: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #3b82f6;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><circle cx="12" cy="8" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.75s" dur="0.2s" values="0;1"/></circle><path stroke-dasharray="10" stroke-dashoffset="10" d="M12 11v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="10;0"/></path></g></svg>',
+      loading: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #7c6bf0;"><g stroke="currentColor"><circle cx="12" cy="12" r="9.5" fill="none" stroke-linecap="round" stroke-width="3"><animate attributeName="stroke-dasharray" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0 150;42 150;42 150;42 150"/><animate attributeName="stroke-dashoffset" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0;-16;-59;-59"/></circle><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></g></svg>'
     };
     
-    // Create overlay
+    options = options || {};
+    const showProgress = options.showProgress || false;
+    const progressCurrent = options.progressCurrent || 0;
+    const progressTotal = options.progressTotal || 0;
+    
+    // Create overlay (backdrop)
     const overlay = document.createElement('div');
     overlay.setAttribute('data-jh-modal', 'true');
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(8px); animation: fadeIn 0.2s ease; padding: 1rem;';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(8px); padding: 1rem;';
     
-    // Create modal with your design
+    // Create modal container (NEW DESIGN from success_modal.html)
     const modal = document.createElement('div');
-    modal.style.cssText = 'width: 272px; background: rgba(13, 13, 15, 1); border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.08); padding: 1.1rem 1.2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.6); font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
+    modal.style.cssText = 'width: 272px; background: rgba(13, 13, 15, 1); border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.08); padding: 1.1rem 1.2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.6); font-family: Geist, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
     
-    modal.innerHTML = '<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px;">' +
-      '<h3 style="margin: 0; font-size: 14.5px; color: #f5f5f7; font-weight: 500;">' + title + '</h3>' +
-      '<button aria-label="Close" onclick="this.closest(\'[data-jh-modal]\').remove()" style="width: 20px; height: 20px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); border: none; flex-shrink: 0; margin-left: 8px; cursor: pointer;"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
-    '</div>' +
-    '<p style="font-size: 11px; color: #8a8a92; margin: 0 0 14px; line-height: 1.5;">' + text + '</p>' +
-    '<div style="display: flex; justify-content: center; margin-bottom: 8px;">' +
-      (icons[type] || icons.info) +
-    '</div>';
+    // Build modal HTML (matching success_modal.html structure)
+    let progressHTML = '';
+    if(showProgress && progressTotal > 0){
+      let progressBars = '';
+      for(let i = 0; i < progressTotal; i++){
+        progressBars += '<div style="width: 18px; height: 3px; border-radius: 2px; background: ' + (i < progressCurrent ? '#7c6bf0' : 'rgba(124, 107, 240, 0.2)') + ';"></div>';
+      }
+      progressHTML = '<div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 12px;">' +
+        progressBars +
+        '<span style="font-size: 10px; color: #8a8a92; margin-left: 5px;">' + progressCurrent + ' / ' + progressTotal + '</span>' +
+      '</div>';
+    }
+    
+    modal.innerHTML = 
+      '<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px;">' +
+        '<h3 style="margin: 0; font-size: 14.5px; color: #f5f5f7; font-weight: 500;">' + title + '</h3>' +
+        '<button aria-label="Close" onclick="this.closest(\'[data-jh-modal]\').remove()" style="width: 20px; height: 20px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); border: none; flex-shrink: 0; margin-left: 8px; cursor: pointer;"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
+      '</div>' +
+      '<p style="font-size: 11px; color: #8a8a92; margin: 0 0 14px; line-height: 1.5;">' + text + '</p>' +
+      progressHTML +
+      '<div style="display: flex; justify-content: center; margin-bottom: ' + (showProgress ? '12px' : '8px') + ';">' +
+        (icons[type] || icons.info) +
+      '</div>';
+    
+    // Add bottom text if checkpoint verified (matching success_modal.html)
+    if(type === 'success' && showProgress){
+      modal.innerHTML += '<p style="text-align: center; font-weight: 500; font-size: 12.5px; margin: 0 0 4px; color: #f5f5f7;">All tasks verified</p>' +
+        '<p style="text-align: center; font-size: 10.5px; color: #8a8a92; margin: 0; line-height: 1.5;">The provider has confirmed your completed tasks successfully.</p>';
+    }
     
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
     
-    // Animate in
+    // Animate in (scale + fade)
     setTimeout(function(){
       modal.style.transform = 'scale(1)';
       modal.style.opacity = '1';
     }, 10);
     
-    // Auto-close after 2.5 seconds
+    // Auto-close after 2.5 seconds (except loading type)
     if(type !== 'loading'){
       setTimeout(function(){
         modal.style.transform = 'scale(0.9)';
@@ -492,7 +519,11 @@ window.JinHubKeySystem.init = function(slug, cfg){
           pendingToken = token;
           savePending(token, true, currentCheckpoint, requiredCheckpoints);
           
-          showAlert('success', 'All Checkpoints Completed!', 'All ' + requiredCheckpoints + ' checkpoints verified! You can now claim your key.');
+          showAlert('success', 'Verification complete', 'All done. You can now claim your key.', {
+            showProgress: true,
+            progressCurrent: requiredCheckpoints,
+            progressTotal: requiredCheckpoints
+          });
           render();
           return;
         } else if(currentCheckpoint > 0 && currentCheckpoint < requiredCheckpoints){
@@ -889,7 +920,11 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 if(verifyingModal) verifyingModal.remove();
                 
                 // Show success alert
-                showAlert('success', 'All Checkpoints Completed!', 'Verification successful! You can now claim your key.');
+                showAlert('success', 'Verification complete', 'All done. You can now claim your key.', {
+                  showProgress: true,
+                  progressCurrent: requiredCheckpoints,
+                  progressTotal: requiredCheckpoints
+                });
                 statusChecked = true;
                 handledReturnFromAds = true; // Mark as handled to skip normal flow
                 return; // Success - exit early
@@ -912,7 +947,11 @@ window.JinHubKeySystem.init = function(slug, cfg){
                 if(verifyingModal) verifyingModal.remove();
                 
                 // Show success alert
-                showAlert('success', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints + ' Complete!', 'Press START again to continue the next checkpoint.');
+                showAlert('info', 'Checkpoint ' + currentCheckpoint + '/' + requiredCheckpoints, 'Press START again to continue the next checkpoint.', {
+                  showProgress: true,
+                  progressCurrent: currentCheckpoint,
+                  progressTotal: requiredCheckpoints
+                });
                 statusChecked = true;
                 handledReturnFromAds = true; // Mark as handled to skip normal flow
                 return; // Success - exit early
