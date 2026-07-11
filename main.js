@@ -844,34 +844,37 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // Show "Verifying tasks..." modal (with spinner, like in screenshot)
   function showVerifyingModal(){
     // Remove existing modal if any
-    const existing = document.querySelector('.jh-modal-overlay');
+    const existing = document.querySelector('[data-jh-verifying]');
     if(existing) existing.remove();
     
     const overlay = document.createElement('div');
-    overlay.className = 'jh-modal-overlay jh-modal-fade-in';
-    overlay.setAttribute('data-jh-verifying', 'true'); // Mark as verifying modal for easy reference
-    // Force z-index inline to ensure visibility
-    overlay.style.cssText = 'position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;';
-    overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
-      '<button class="jh-modal-close" onclick="this.closest(\'.jh-modal-overlay\').remove()">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
-      '</button>' +
-      '<h2 class="jh-modal-title">Verification in progress</h2>' +
-      '<p class="jh-modal-subtitle">Keep this tab open. The key flow will finish here.</p>' +
-      '<div class="jh-modal-checkpoint-progress">' +
-        '<span>CHECKPOINT 1 / 1</span>' +
-      '</div>' +
-      '<div class="jh-modal-icon jh-modal-spinner" style="color: #3b82f6">' +
-        '<svg class="jh-spinner" viewBox="0 0 24 24" fill="none">' +
-          '<circle class="jh-spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>' +
-        '</svg>' +
-      '</div>' +
-      '<h3 class="jh-modal-verifying-title">Verifying tasks...</h3>' +
-      '<p class="jh-modal-verifying-text">Waiting for LootLabs to confirm your completed tasks. This takes a few seconds.</p>' +
-      '<button class="jh-modal-cancel" onclick="this.closest(\'.jh-modal-overlay\').remove()">Cancel</button>' +
-    '</div>';
+    overlay.setAttribute('data-jh-verifying', 'true');
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(8px); padding: 1rem;';
     
+    const modal = document.createElement('div');
+    modal.style.cssText = 'width: 272px; background: rgba(13, 13, 15, 1); border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.08); padding: 1.1rem 1.2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.6); font-family: Geist, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
+    
+    modal.innerHTML = 
+      '<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px;">' +
+        '<h3 style="margin: 0; font-size: 14.5px; color: #f5f5f7; font-weight: 500;">Verification in progress</h3>' +
+        '<button aria-label="Close" onclick="this.closest(\'[data-jh-verifying]\').remove()" style="width: 20px; height: 20px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); border: none; flex-shrink: 0; margin-left: 8px; cursor: pointer;"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
+      '</div>' +
+      '<p style="font-size: 11px; color: #8a8a92; margin: 0 0 14px; line-height: 1.5;">Keep this tab open. The key flow will finish here.</p>' +
+      '<div style="display: flex; justify-content: center; margin-bottom: 12px;">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #7c6bf0;"><g stroke="currentColor"><circle cx="12" cy="12" r="9.5" fill="none" stroke-linecap="round" stroke-width="3"><animate attributeName="stroke-dasharray" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0 150;42 150;42 150;42 150"/><animate attributeName="stroke-dashoffset" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0;-16;-59;-59"/></circle><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></g></svg>' +
+      '</div>' +
+      '<p style="text-align: center; font-weight: 500; font-size: 12.5px; margin: 0 0 4px; color: #f5f5f7;">Verifying tasks...</p>' +
+      '<p style="text-align: center; font-size: 10.5px; color: #8a8a92; margin: 0; line-height: 1.5;">Waiting for provider to confirm your completed tasks. This takes a few seconds.</p>';
+    
+    overlay.appendChild(modal);
     document.body.appendChild(overlay);
+    
+    // Animate in
+    setTimeout(function(){
+      modal.style.transform = 'scale(1)';
+      modal.style.opacity = '1';
+    }, 10);
+    
     return overlay;
   }
   
