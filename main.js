@@ -143,7 +143,12 @@ window.JinHubKeySystem.init = function(slug, cfg){
   }
   function saveKeysCache(keys, totalKeys, remaining){
     try{
-      localStorage.setItem(KEYS_CACHE_KEY, JSON.stringify({ keys: keys || [], totalKeys: totalKeys || 0, remaining: remaining }));
+      localStorage.setItem(KEYS_CACHE_KEY, JSON.stringify({ 
+        keys: keys || [], 
+        totalKeys: totalKeys || 0, 
+        remaining: remaining,
+        syncedAt: Date.now() // Timestamp saat data terakhir di-sync dari server
+      }));
     }catch(e){}
   }
 
@@ -287,13 +292,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
         const baseH = 14; // BASE_HOURS
         const grantedMin = keyData.grantedMin != null ? keyData.grantedMin : (baseH * 60);
         
-        // NEW LOGIC: Button "+14h" muncul kalau time left < 14h
-        // Button "Max" muncul kalau time left >= 14h
+        // FIX: Cek apakah TOTAL granted time sudah >= 28h, BUKAN time left
+        // grantedMin adalah total waktu yang pernah diberikan ke key ini (base 14h + bonus dari checkpoint)
+        const totalGrantedH = grantedMin / 60; // convert minutes to hours
+        const capped = isActive && totalGrantedH >= capH; // Sudah dikasih 28h atau lebih
+        
         const timeLeftMs = isActive ? (keyData.expiresAt - Date.now()) : 0;
         const timeLeftH = timeLeftMs / 3600000; // convert to hours
-        
-        // Capped = time left >= 14h (HANYA CEK TIME LEFT, BUKAN grantedMin!)
-        const capped = isActive && timeLeftH >= 14;
         
         row.hidden = false;
         row.querySelector('[data-pk-key-text]').textContent = keyData.key;
@@ -314,9 +319,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
         const renewLabel = row.querySelector('[data-pk-renew-label]');
         
         if(isActive){
-          // Key aktif -> tombol "+14h" (kalau < 14h) atau "Max" (kalau >= 14h)
+          // Key aktif -> tombol "+14h" atau "Max"
+          // Tampilkan "+Xh" (sisa bonus yang bisa ditambah) atau "Max" jika sudah cap
+          const remainingBonusH = Math.max(0, capH - totalGrantedH);
+          const displayLabel = capped ? 'Max' : (remainingBonusH > 0 ? '+' + Math.floor(remainingBonusH) + 'h' : 'Max');
+          
           renewIcon.innerHTML = ADDTIME_ICON;
-          renewLabel.textContent = capped ? 'Max' : '+14h';
+          renewLabel.textContent = displayLabel;
           renewBtn.disabled = !checkpointVerified || claiming || capped || locked;
           renewBtn.classList.toggle('is-solid', checkpointVerified && !capped && !locked);
           renewBtn.classList.toggle('is-capped', capped);
@@ -402,7 +411,7 @@ window.JinHubKeySystem.init = function(slug, cfg){
     }
   }
 
-  async function refreshState(){
+  async function refreshState(retryCount = 0){
     isRefreshingState = true;
     // PRESERVE checkpoint progress before refresh (don't let it reset!)
     const preservedCheckpoint = currentCheckpoint;
@@ -433,10 +442,28 @@ window.JinHubKeySystem.init = function(slug, cfg){
         checkpointVerified = preservedVerified;
         
         render();
+      } else {
+        // API response tapi data tidak success - mungkin KV belum ready
+        throw new Error('API returned unsuccessful response');
       }
-      // Kalau API gagal, JANGAN ubah state sama sekali - biar pakai cache lama
     }catch(e){ 
-      console.warn('[KeySystem] refreshState failed, keeping cached data:', e);
+      console.warn('[KeySystem] refreshState failed (attempt ' + (retryCount + 1) + '):', e);
+      
+      // Retry mechanism untuk mengatasi eventual consistency KV
+      // Max 3 retry dengan exponential backoff (2s, 5s, 10s)
+      if(retryCount < 3){
+        const delays = [2000, 5000, 10000];
+        const delay = delays[retryCount];
+        console.log('[KeySystem] Retrying in ' + (delay/1000) + 's...');
+        
+        setTimeout(() => {
+          refreshState(retryCount + 1);
+        }, delay);
+      } else {
+        // Setelah 3 retry masih gagal, tampilkan pesan ke user
+        console.error('[KeySystem] Failed to fetch keys after 3 retries. Keys might appear after KV propagation (up to 60 minutes).');
+        showAlert('info', 'Loading Keys...', 'Your keys are being loaded. If they don\'t appear, please refresh the page in a few minutes.');
+      }
       // Tetap render dengan data cache yang ada (state tidak diubah)
     } finally {
       isRefreshingState = false;
@@ -892,7 +919,19 @@ window.JinHubKeySystem.init = function(slug, cfg){
         return; // Don't run normal flow if already handled
       }
       
+      // Show subtle loading indicator jika ada cached keys yang mungkin stale
+      const cache = loadKeysCache();
+      const cacheAge = cache && cache.syncedAt ? Date.now() - cache.syncedAt : Infinity;
+      const cacheIsStale = cacheAge > (5 * 60 * 1000); // > 5 menit = stale
+      
+      if(cacheIsStale && cache && cache.keys && cache.keys.length > 0){
+        console.log('[KeySystem] Cache is stale (age: ' + Math.round(cacheAge/1000) + 's), refreshing from server...');
+        showNote('Syncing keys from server...');
+      }
+      
       refreshState().then(async function(){
+        showNote(null); // Clear loading note
+        
         if(!pending || !pending.token) return;
       
       // Cek apakah checkpoint lama masih relevan
@@ -928,6 +967,34 @@ window.JinHubKeySystem.init = function(slug, cfg){
     });
   }, 300); // 300ms delay to let cached UI show first
   })();
+  
+  // ===== PERIODIC BACKGROUND SYNC =====
+  // Auto-refresh keys setiap 2 menit untuk mengatasi KV eventual consistency
+  // dan memastikan user selalu melihat data terbaru tanpa perlu manual refresh
+  let backgroundSyncTimer = null;
+  function startBackgroundSync(){
+    // Clear existing timer jika ada
+    if(backgroundSyncTimer) clearInterval(backgroundSyncTimer);
+    
+    // Sync setiap 2 menit (120000ms)
+    backgroundSyncTimer = setInterval(() => {
+      // Hanya sync jika user tidak sedang dalam proses checkpoint/claiming
+      if(!waiting && !claiming && !starting && !isRefreshingState){
+        console.log('[KeySystem] Background sync: refreshing keys from server...');
+        refreshState().catch(e => {
+          console.warn('[KeySystem] Background sync failed:', e);
+        });
+      }
+    }, 120000); // 2 menit
+  }
+  
+  // Mulai background sync
+  startBackgroundSync();
+  
+  // Cleanup saat tab ditutup/navigate away
+  window.addEventListener('beforeunload', () => {
+    if(backgroundSyncTimer) clearInterval(backgroundSyncTimer);
+  });
 };
 
 
