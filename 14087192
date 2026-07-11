@@ -1,0 +1,4413 @@
+local _version = "1.6.64-fix"
+local WindUI =
+	loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/download/" .. _version .. "/main.lua"))()
+
+WindUI:AddTheme({
+	Name = "JHyellow", -- Nama tema, dipanggil di CreateWindow dengan Theme = "JHyellow"
+
+	-- WARNA DASAR / GLOBAL
+	Primary = Color3.fromHex("#eab308"), -- Warna utama (abu-abu), dipakai ikon secara umum
+	White = Color3.fromHex("#eab308"), -- Warna putih murni, dipakai berbagai elemen border dll
+	Black = Color3.new(0, 0, 0), -- Warna hitam murni, dipakai shadow dll
+	Dialog = Color3.fromHex("#18181b"), -- Warna background dialog (popup konfirmasi)
+
+	-- BACKGROUND UTAMA WINDOW
+	Background = Color3.fromHex("#000000"), -- Warna background utama keseluruhan UI
+	BackgroundTransparency = 0, -- 0 = tidak transparan, 1 = transparan penuh
+	Hover = Color3.fromHex("#FFFFFF"), -- Warna efek hover secara global
+
+	-- PANEL (lapisan di belakang konten)
+	PanelBackground = Color3.new(1, 1, 1), -- Warna panel (putih)
+	PanelBackgroundTransparency = 0.95, -- Hampir transparan (0.95), jadi sangat tipis
+
+	-- WINDOW / JENDELA UTAMA
+	WindowBackground = Color3.fromHex("#0a0a0a"), -- Warna background jendela utama
+	WindowShadow = Color3.new(0, 0, 0), -- Warna bayangan di bawah window (hitam)
+	WindowShadowTransparency = 0.6, -- (dinonaktifkan) Transparansi bayangan window
+
+	-- TOPBAR (bagian atas window: judul, author, ikon)
+	WindowTopbarTitle = Color3.fromHex("#FFFFFF"), -- Warna teks judul di topbar
+	WindowTopbarAuthor = Color3.fromHex("#a6e3a1"), -- Warna teks author/subtitle di topbar
+	WindowTopbarIcon = Color3.fromHex("#a1a1aa"), -- Warna ikon di sebelah judul
+	WindowTopbarButtonIcon = Color3.fromHex("#a6e3a1"), -- Warna ikon tombol (minimize, close dll)
+	WindowSearchBarBackground = Color3.fromHex("#0a0a0a"), -- Warna background search bar di topbar
+
+	-- TAB (menu navigasi di sidebar kiri)
+	TabBackground = Color3.fromHex("#eab308"), -- Warna background tab (putih)
+	TabBackgroundHover = Color3.fromHex("#eab308"), -- Warna background saat tab di-hover
+	TabBackgroundHoverTransparency = 0.97, -- Sangat transparan saat hover (efek subtle)
+	TabBackgroundActive = Color3.fromHex("#eab308"), -- Warna background tab yang sedang aktif
+	TabBackgroundActiveTransparency = 0.93, -- Sedikit lebih terlihat dari hover
+
+	TabText = Color3.fromHex("#eab308"), -- Warna teks nama tab
+	TabTextTransparency = 0.3, -- Teks tab tidak aktif: 30% transparan (agak redup)
+	TabTextTransparencyActive = 0, -- Teks tab aktif: 0% transparan (penuh/terang)
+	TabTitle = Color3.fromHex("#ffffff"), -- Warna judul section di dalam tab
+
+	TabIcon = Color3.fromHex("#eab308"), -- Warna ikon tab
+	TabIconTransparency = 0.4, -- Ikon tab tidak aktif: 40% transparan (redup)
+	TabIconTransparencyActive = 0, -- Ikon tab aktif: 10% transparan (hampir penuh)
+
+	TabBorderTransparency = 1, -- Border tab tidak aktif: 100% transparan (tidak terlihat)
+	TabBorderTransparencyActive = 0.65, -- Border tab aktif: 75% transparan (samar terlihat)
+	TabBorder = Color3.fromHex("#eab308"), -- Warna border tab (putih)
+
+	-- ELEMENT (Toggle, Slider, Button, dll di dalam tab)
+	ElementBackground = Color3.fromHex("#FFFFFF"), -- Warna background setiap elemen
+	ElementBackgroundTransparency = 0.93, -- Sangat transparan, efek frosted glass
+	ElementBackgroundHover = WindUI.Creator:AddColor( -- Warna background elemen saat di-hover
+		"ElementBackground",
+		"#ffffff",
+		1 / 10
+	), -- = ElementBackground + 10% putih (lebih terang)
+	ElementTitle = Color3.fromHex("#FFFFFF"), -- Warna teks judul elemen
+	ElementDesc = Color3.fromHex("#FFFFFF"), -- Warna teks deskripsi/subtitle elemen
+	ElementIcon = Color3.fromHex("#a1a1aa"), -- Warna ikon di sebelah kiri elemen
+
+	-- POPUP (window kecil muncul di tengah layar)
+	PopupBackground = Color3.fromHex("#0a0a0a"), -- Warna background popup
+	PopupBackgroundTransparency = "BackgroundTransparency", -- Ikut nilai BackgroundTransparency global
+	PopupTitle = Color3.fromHex("#FFFFFF"), -- Warna teks judul popup
+	PopupContent = Color3.fromHex("#FFFFFF"), -- Warna teks isi popup
+	PopupIcon = Color3.fromHex("#a1a1aa"), -- Warna ikon di popup
+
+	-- DIALOG (popup konfirmasi Yes/No)
+	DialogBackground = Color3.fromHex("#0a0a0a"), -- Warna background dialog
+	DialogBackgroundTransparency = "BackgroundTransparency", -- Ikut nilai BackgroundTransparency global
+	DialogTitle = Color3.fromHex("#FFFFFF"), -- Warna teks judul dialog
+	DialogContent = Color3.fromHex("#FFFFFF"), -- Warna teks isi dialog
+	DialogIcon = Color3.fromHex("#a1a1aa"), -- Warna ikon di dialog
+
+	-- TOGGLE (tombol on/off)
+	Toggle = Color3.fromHex("#eab308"), -- Warna background toggle saat OFF (abu gelap)
+	ToggleBar = Color3.new(1, 1, 1), -- Warna lingkaran/thumb toggle (putih)
+
+	-- SLIDER (penggeser nilai)
+	SliderIcon = Color3.fromHex("#a1a1aa"), -- Warna ikon di samping slider
+	Slider = Color3.fromHex("#eab308"), -- Warna fill/progress bar slider (biru)
+	SliderThumb = Color3.new(1, 1, 1), -- Warna bulatan penggeser slider (putih)
+	SliderIconFrom = Color3.fromHex("#a1a1aa"), -- Warna ikon batas minimum slider
+	SliderIconTo = Color3.fromHex("#a1a1aa"), -- Warna ikon batas maksimum slider
+
+	-- TAB SECTION ICON (ikon di dalam section tab)
+	TabSectionIcon = Color3.fromHex("#a1a1aa"), -- Warna ikon section di dalam tab
+	SectionIcon = Color3.fromHex("#a1a1aa"), -- Warna ikon section header
+
+	-- SECTION BOX (kotak pembatas grup elemen)
+	SectionExpandIcon = Color3.new(1, 1, 1), -- Warna ikon expand/collapse section (putih)
+	SectionExpandIconTransparency = 0.4, -- Ikon expand 40% transparan
+	SectionBox = Color3.new(1, 1, 1), -- Warna kotak section (putih)
+	SectionBoxTransparency = 0.95, -- Kotak section sangat transparan
+	SectionBoxBorder = Color3.new(1, 1, 1), -- Warna border kotak section (putih)
+	SectionBoxBorderTransparency = 0.65, -- Border section 75% transparan
+	SectionBoxBackground = Color3.new(1, 1, 1), -- Warna background dalam section (putih)
+	SectionBoxBackgroundTransparency = 0.95, -- Background section sangat transparan
+
+	-- NOTIFICATION (notifikasi pojok layar)
+	Notification = Color3.fromHex("#0a0a0a"), -- Warna background notifikasi
+	NotificationTitle = Color3.fromHex("#FFFFFF"), -- Warna teks judul notifikasi
+	NotificationTitleTransparency = 0, -- Judul notifikasi penuh (tidak transparan)
+	NotificationContent = Color3.fromHex("#FFFFFF"), -- Warna teks isi notifikasi
+	NotificationContentTransparency = 0.4, -- Isi notifikasi 40% transparan (agak redup)
+	NotificationDuration = Color3.fromHex("#eab308"), -- Warna bar durasi/timer notifikasi (putih)
+	NotificationDurationTransparency = 0.95, -- Bar durasi sangat transparan
+	NotificationBorder = Color3.fromHex("#eab308"), -- Warna border notifikasi (putih)
+	NotificationBorderTransparency = 0.75, -- Border notifikasi 75% transparan
+
+	-- DROPDOWN & LABEL
+	DropdownTabBorder = Color3.fromHex("#eab308"), -- Warna border tab dropdown (putih)
+	LabelBackground = Color3.fromHex("#ffffff"), -- Warna background label/paragraph (putih)
+	LabelBackgroundTransparency = 0.95, -- Background label sangat transparan
+})
+
+local Window = WindUI:CreateWindow({
+	Title = "JinHub | Run a Restaurant",
+	Icon = "rbxassetid://72073171881829",
+	Author = "Website: jinhub.my.id/rsc",
+	Folder = "JinHub Config",
+
+	Size = UDim2.fromOffset(480, 350),
+	MinSize = Vector2.new(480, 350),
+	MaxSize = Vector2.new(480, 350),
+	Transparent = true, -- window transparency
+	Theme = "JHyellow", -- library theme
+	Resizable = true, -- the ability to rezize window
+	SideBarWidth = 165, -- sidebar (tabs) width
+	HideSearchBar = true, -- hide search bar
+	ScrollBarEnabled = true, -- scrollbars that are located to the right of the scroll frame
+
+	NewElements = true, -- ← INI yang bikin toggle & slider modern seperti di screenshot
+	Acrylic = true, -- ← efek kaca/blur di background window
+	Radius = 11, -- Radius sudut melengkung pada window (semakin besar = makin bulat)
+	ElementsRadius = 9, -- Radius sudut melengkung pada setiap elemen (button, toggle, dll)
+
+	BackgroundImageTransparency = 0.42, -- background image transparency
+	Background = "rbxassetid://1234", -- rbxassetid
+})
+
+Window:DisableTopbarButtons({
+	"Fullscreen",
+})
+
+Window:SetIconSize(38)
+
+--====================================================
+-- UNIVERSAL ANTI AFK
+--====================================================
+
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+
+local LocalPlayer = Players.LocalPlayer
+
+local Connection
+
+local function AntiAfk()
+
+    if Connection then
+        Connection:Disconnect()
+    end
+
+    Connection = LocalPlayer.Idled:Connect(function()
+
+        pcall(function()
+
+            VirtualUser:CaptureController()
+
+            VirtualUser:ClickButton2(
+                Vector2.new(0,0)
+            )
+
+        end)
+
+    end)
+end
+
+AntiAfk()
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(2)
+    AntiAfk()
+end)
+
+print("~Thanks For Use JinHub Script~")
+
+--==============================================
+-- GUI BUTTON
+--==============================================
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "JinHubXMenuGUI"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = CoreGui
+
+local button = Instance.new("ImageButton")
+button.Size = UDim2.new(0, 44, 0, 44)
+button.Name = "JinHubXToggle"
+button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+button.Image = "rbxassetid://72073171881829"
+button.AutoButtonColor = true
+button.Parent = gui
+
+local corner = Instance.new("UICorner", button)
+corner.CornerRadius = UDim.new(0, 6)
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1.3
+stroke.Color = Color3.fromHex("#D7942D")
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = button
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 100)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 0)),
+})
+gradient.Rotation = 45
+gradient.Parent = stroke
+
+-- POSISI: TENGAH ATAS
+local BTN_SIZE = 44
+local TOP_PADDING = 45 -- jarak dari atas (hindari topbar Roblox)
+
+local function setDefaultPosition()
+	-- X = 0.5 (tengah), offset -22 agar center pas
+	-- Y = dari atas dengan padding
+	button.Position = UDim2.new(0.5, -(BTN_SIZE / 2), 0, TOP_PADDING)
+end
+
+setDefaultPosition()
+
+-- Update otomatis saat layar dirotasi / resize
+workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(setDefaultPosition)
+
+-- DRAG SYSTEM
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+local function clampPosition(px, py)
+	local screenSize = workspace.CurrentCamera.ViewportSize
+	px = math.clamp(px, 0, screenSize.X - BTN_SIZE)
+	py = math.clamp(py, 0, screenSize.Y - BTN_SIZE)
+	return UDim2.new(0, px, 0, py)
+end
+
+button.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = button.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+button.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local screenSize = workspace.CurrentCamera.ViewportSize
+		local delta = input.Position - dragStart
+
+		local px = startPos.X.Scale * screenSize.X + startPos.X.Offset + delta.X
+		local py = startPos.Y.Scale * screenSize.Y + startPos.Y.Offset + delta.Y
+
+		button.Position = clampPosition(px, py)
+	end
+end)
+
+-- TOGGLE
+local opened = true
+button.MouseButton1Click:Connect(function()
+	if opened then
+		opened = false
+		pcall(function()
+			Window:Close()
+		end)
+	else
+		opened = true
+		pcall(function()
+			Window:Open()
+		end)
+	end
+end)
+
+Window:OnDestroy(function()
+	gui:Destroy()
+end)
+
+Window:Tag({ Title = "v2.0.4", Color = Color3.fromHex("#a6e3a1") })
+
+InfoTab = Window:Tab({
+	Title = "Local",
+	Icon = "solar:home-2-bold",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+	Border = true,
+})
+
+battleTab = Window:Tab({
+	Title = "Main",
+	Icon = "users-round",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+	Border = true,
+})
+
+farmTab = Window:Tab({
+	Title = "Farm",
+	Icon = "wheat",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+	Border = true,
+})
+
+petsTab = Window:Tab({
+	Title = "Misc",
+	Icon = "repeat-2",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+	Border = true,
+})
+
+autoTab = Window:Tab({
+	Title = "Shop",
+	Icon = "shopping-cart",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+	Border = true,
+})
+
+TradeTab = Window:Tab({
+	Title = "Trade",
+	Icon = "send-to-back",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+	Border = true,
+})
+
+SellingTab = Window:Tab({
+	Title = "Selling",
+	Icon = "dollar-sign",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+	Border = true,
+})
+
+EmployeesTab = Window:Tab({
+	Title = "Employees",
+	Icon = "id-card-lanyard",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+	Border = true,
+})
+
+Window:Divider()
+
+UtilityTab = Window:Tab({
+	Title = "Utility",
+	Icon = "solar:checklist-minimalistic-bold",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+})
+
+setTab = Window:Tab({
+	Title = "Config",
+	Icon = "solar:folder-2-bold",
+	IconColor = Color3.fromHex("#eab308"),
+	IconThemed = true,
+	ShowTabTitle = true,
+	Border = true,
+})
+
+
+local Players          = game:GetService("Players")
+local TweenService     = game:GetService("TweenService")
+local UIS              = game:GetService("UserInputService")
+local RunService       = game:GetService("RunService")
+local ReplicatedStorage= game:GetService("ReplicatedStorage")
+local player           = Players.LocalPlayer
+local playerGui        = player:WaitForChild("PlayerGui")
+
+-- SECTION 2 — RUNTIME ACCESS LAYER
+local RS = ReplicatedStorage
+local function safeRequire(path)
+	local ok, m = pcall(require, path)
+	if ok then return m end
+	warn("[JinHub] require failed: "..tostring(path).." -> "..tostring(m))
+	return nil
+end
+
+local Runtime = {}
+
+-- Core managers/services
+Runtime.ControllerManager = safeRequire(RS.Core.Controller.ControllerManager)
+Runtime.ConfigDataManager = safeRequire(RS.Core.Config.ConfigDataManager)
+Runtime.BattleService     = safeRequire(RS.Script.Battle.BattleService)
+Runtime.BagService        = safeRequire(RS.Script.Bag.BagService)
+Runtime.PetStorage        = safeRequire(RS.Storage.PetStorage)
+
+local function findModule(name)
+	for _,d in ipairs(RS:GetDescendants()) do
+		if d.Name==name and d:IsA("ModuleScript") then return d end
+	end
+end
+
+Runtime.BattleConst        = safeRequire(RS.Script.Battle.Basic.BattleConst)
+Runtime.SkillConst         = (function() local m=findModule("SkillConst"); return m and safeRequire(m) end)()
+Runtime.CreatureConst      = (function() local m=findModule("CreatureConst"); return m and safeRequire(m) end)()
+Runtime.ConfigConst        = safeRequire(RS.Core.Config.ConfigConst)
+Runtime.BattleDataGetModule= safeRequire(RS.Script.MainBattleWindow.BattleDataGetModule)
+Runtime.SkillAreaModule    = safeRequire(RS.Script.MainBattleWindow.MainBattleSkillAreaModule)
+Runtime.GetBallDataModule  = safeRequire(RS.Script.HatchEgg.GetBallDataModule)
+Runtime.BattleChoreoConst  = (function() local m=findModule("BattleChoreoConst"); return m and safeRequire(m) end)()
+-- Battle-speed bypass surface
+Runtime.AnimCompleteReporter = (function() local m=findModule("BattleChoreoAnimationCompleteReporterModule"); return m and safeRequire(m) end)()
+Runtime.SettingService       = (function() local m=findModule("SettingService"); return m and safeRequire(m) end)()
+-- switch-pet cosmetic VFX (ball throw/catch)
+Runtime.BattleNPCVisualEffectController = safeRequire(RS.Controller.BattleNPCVisualEffectController)
+Runtime.SkillPerformanceCfg = safeRequire(RS.Script.Pet.Cfg.SkillPerformanceCfg)
+
+
+-- Remotes
+local function findRemote(name, cls)
+	for _,d in ipairs(RS:GetDescendants()) do
+		if d.Name==name and (not cls or d:IsA(cls)) then return d end
+	end
+end
+Runtime.ReqOperateBattle   = findRemote("ReqOperateBattle", "RemoteFunction")
+Runtime.ReqEnterPetBattle  = findRemote("ReqEnterPetBattle", "RemoteEvent")
+Runtime.ReqEnterArea       = findRemote("ReqEnterArea", "RemoteEvent")
+Runtime.CommEnterArea      = (function()
+	local ok,b = pcall(function() return RS.Bindable.Area.CommEnterArea end); return ok and b or nil
+end)()
+
+-- ConfigConst may live elsewhere -> fallback search
+if not Runtime.ConfigConst then
+	local m=findModule("ConfigConst"); Runtime.ConfigConst = m and safeRequire(m)
+end
+
+function Runtime.getController(name)
+	if not Runtime.ControllerManager then return nil end
+	local ok,c = pcall(Runtime.ControllerManager.getController, name)
+	if ok then return c end
+	return nil
+end
+
+function Runtime.getCurrentBattle()
+	if not Runtime.BattleService then return nil end
+	local ok,b = pcall(Runtime.BattleService.getCurrentBattle)
+	if ok then return b end
+	return nil
+end
+
+-- Ball item ids 
+Runtime.BALL = {
+	NORMAL   = 2000015, -- this one is infinite
+	HIGH     = 2000016,
+	KING     = 2000017,
+	PRISM    = 2000018,
+}
+
+-- ---- Extra services for Farm-utils
+Runtime.ChestService       = safeRequire(RS.Script.Chest.ChestService)
+Runtime.BattlePassService  = safeRequire(RS.Script.BattlePass.BattlePassService)
+Runtime.LevelRewardService = safeRequire(RS.Script.PlayerLevelReward.PlayerLevelRewardService)
+Runtime.PetManualService   = safeRequire(RS.Script.PetManual.PetManualService)
+Runtime.CommShopService    = safeRequire(RS.Script.CommShop.CommShopService)
+Runtime.CommShopConst      = safeRequire(RS.Script.CommShop.Basic.CommShopConst)
+Runtime.ShopService        = safeRequire(RS.Script.Shop.ShopService)
+Runtime.PetService         = safeRequire(RS.Script.Pet.PetService)
+Runtime.PetGroupService    = safeRequire(RS.Script.PetGroup.PetGroupService)
+Runtime.LvService          = safeRequire(RS.Script.Lv.LvService)
+Runtime.PetConst           = safeRequire(RS.Script.Pet.Basic.PetConst)
+Runtime.NpcConst           = safeRequire(RS.Script.NPC.Basic.NpcConst)
+Runtime.TaskService        = safeRequire(RS.Script.Task.TaskService)
+Runtime.TowerService       = safeRequire(RS.Script.Dungeon.TowerDungeonService)
+Runtime.RefreshService     = safeRequire(RS.Script.RefreshSystem.RefreshService)
+
+-- Task claim functions
+-- remote as a last-resort fallback.
+local function findBindable(name)
+	local b = RS:FindFirstChild("Bindable")
+	if b then
+		local hit = b:FindFirstChild(name, true)
+		if hit and hit:IsA("BindableFunction") then return hit end
+	end
+	return nil
+end
+Runtime.ReqCompleteTask       = findBindable("ReqCompleteTask")
+Runtime.ReqClaimActiveReward  = findBindable("ReqClaimActiveReward")
+Runtime.ReqCompleteTaskRemote      = findRemote("ReqCompleteTask", "RemoteFunction")
+Runtime.ReqClaimActiveRewardRemote = findRemote("ReqClaimActiveReward", "RemoteFunction")
+
+-- SHOP_TYPE for the traveling merchant (verified == 3)
+Runtime.SHOP_TYPE_MERCHANT = (Runtime.CommShopConst and Runtime.CommShopConst.SHOP_TYPE_TRAVELING_MERCHANT) or 3
+
+-- ---- Auto-Quest drivers
+do
+	-- Dungeon enter (verified: Remote/Dungeon/ReqEnterDungeon, RemoteFunction, 1 arg dungeonId)
+	local reqEnterDungeon = findRemote("ReqEnterDungeon", "RemoteFunction")
+	local DungeonService = safeRequire(RS.Script.Dungeon.DungeonService)
+	if reqEnterDungeon then
+		Runtime.enterDungeon = function(dungeonId)
+			return reqEnterDungeon:InvokeServer(dungeonId)
+		end
+	elseif DungeonService and DungeonService.applyEnterDungeon then
+		Runtime.enterDungeon = function(dungeonId)
+			return DungeonService.applyEnterDungeon(dungeonId)
+		end
+	end
+
+	-- Pet "feed" (PET_FEED goal) = use an EXP fruit on a pet. Verified path:
+	--   PetService.reqPetAddExpByItems(petUid, { {id=<itemId>, num=<count>}, ... })
+	-- Small EXP Fruit = itemId 4000021 (100 EXP). feedPet(uid, itemId, num) feeds `num`
+	-- fruits of `itemId` to the pet uid. Returns true on ErrorCode.SUCCEEDED(20000).
+	local PetSvc = Runtime.PetService or safeRequire(RS.Script.Pet.PetService)
+	Runtime.EXP_FRUIT = { SMALL=4000021, MEDIUM=4000022, LARGE=4000023, SUPERIOR=4000039 }
+	-- item counts via the game's own accessor (bagFruitCounts uses getItemNumById)
+	Runtime.BagService = Runtime.BagService or safeRequire(RS.Script.Bag.BagService)
+	if PetSvc and PetSvc.reqPetAddExpByItems then
+		Runtime.feedPet = function(uuid, itemId, num)
+			itemId = itemId or Runtime.EXP_FRUIT.SMALL
+			num = num or 1
+			local ok, r = pcall(PetSvc.reqPetAddExpByItems, uuid, { { id=itemId, num=num } })
+			return ok and (r==20000 or r==true)
+		end
+	else
+		local addExpRemote = findRemote("ReqPetAddExpByItems", "RemoteFunction")
+		if addExpRemote then
+			Runtime.feedPet = function(uuid, itemId, num)
+				itemId = itemId or Runtime.EXP_FRUIT.SMALL
+				local ok, r = pcall(function() return addExpRemote:InvokeServer(uuid, { { id=itemId, num=num or 1 } }) end)
+				return ok and (r==20000 or r==true)
+			end
+		end
+	end
+
+	-- NPC talk / dialogue-advance. The real path (verified via DialogueWindowController):
+	--   ReqMarkDialogueTalkCompleted:FireServer(talkId)   -- marks a dialogue node done
+	--   ReqCompleteDialogueTask:Invoke(talkId, taskId)    -- submits a talk-quest turn-in
+	-- A TALK_TO_NPC goal completes once the npc's initial-dialogue talk nodes are marked
+	-- complete. We resolve the npc's talk graph from NpcConfig.npcInitialDialogueId (a
+	-- {worldId -> firstTalkId} map) and TalkConfig.nextTalkIds, then mark each node.
+	Runtime.ReqMarkDialogueTalkCompleted = findRemote("ReqMarkDialogueTalkCompleted", "RemoteEvent")
+	Runtime.ReqCompleteDialogueTask      = findRemote("ReqCompleteDialogueTask", "RemoteFunction")
+	Runtime.ReqReceiveDialogueTask       = findRemote("ReqReceiveDialogueTask", "RemoteFunction")
+	if Runtime.ReqMarkDialogueTalkCompleted then
+		Runtime.talkToNpc = function(npcId, taskId)
+			local CDM, CC = Runtime.ConfigDataManager, Runtime.ConfigConst
+			if not (CDM and CC) then return false end
+			local okC, npcCfg = pcall(CDM.getConfig, CC.ConfigName.NPC, npcId)
+			if not (okC and type(npcCfg)=="table") then return false end
+			-- collect the initial talk ids (per world) then walk nextTalkIds chains
+			local firstIds = {}
+			if type(npcCfg.npcInitialDialogueId)=="table" then
+				for _,v in pairs(npcCfg.npcInitialDialogueId) do
+					local n = tonumber(v); if n then firstIds[#firstIds+1] = n end
+				end
+			end
+			local marked, seen = false, {}
+			local function walk(talkId, depth)
+				if not talkId or seen[talkId] or depth>12 then return end
+				seen[talkId] = true
+				pcall(function() Runtime.ReqMarkDialogueTalkCompleted:FireServer(talkId) end)
+				marked = true
+				local okT, talkCfg = pcall(CDM.getConfig, CC.ConfigName.TALK, talkId)
+				if okT and type(talkCfg)=="table" then
+					-- submit a talk-quest turn-in if this node carries a taskId
+					if Runtime.ReqCompleteDialogueTask and (talkCfg.taskId or taskId) then
+						pcall(function() Runtime.ReqCompleteDialogueTask:Invoke(talkId, talkCfg.taskId or taskId) end)
+					end
+					if type(talkCfg.nextTalkIds)=="table" then
+						for _,nt in ipairs(talkCfg.nextTalkIds) do walk(tonumber(nt), depth+1) end
+					end
+				end
+			end
+			for _,fid in ipairs(firstIds) do walk(fid, 0) end
+			return marked
+		end
+	end
+end
+
+
+
+
+-- SECTION 3 — HUBSTATE + BATTLE LOOP
+local HubState = {
+	toggles = {
+		autoSkill=false, autoSwitchDeadPet=false,
+		autoCatch=false, autoCatchShiny=false, autoCatchPrismatic=false, autoCatchShinyPrismatic=false,
+		fastBattle=false, battleSpeed2x=false, autoSkipNormal=false,
+
+		farmEnabled=false, farmTargetConfigId=nil,
+		npcEnabled=false, npcTargetId=nil,
+		bossEnabled=false, bossTargetId=nil,
+		autoHopBoss=false, hopCooldownSec=20,
+		towerEnabled=false, towerStartLayer=1, towerExitOnLoss=false,
+
+		-- Farm utilities / rewards (background)
+		antiAfk=false, fpsBoost=false, autoCleanUp=false,
+		autoClaimBattlepass=false, autoClaimLevel=false, autoClaimIndex=false,
+		-- Merchant
+		autoBuy=false,
+		-- Pets 
+		autoLockShiny=false, autoLockPrismatic=false, autoLockSSS=false,
+		autoRelease=false, keepShiny=false, keepPrismatic=false,
+		keepGrades={},
+		-- Quests
+		autoClaimQuests=false, autoDoQuest=false,
+	},
+	ballConfig = { normal=Runtime.BALL.NORMAL, shiny=nil, prismatic=nil, shinyPrismatic=nil },
+	activityLock = nil,        -- nil|"farm"|"npc"|"boss"|"tower"
+	lockPriority = { boss=1, npc=2, tower=3, farm=4 },
+	currentBattle = nil,
+	_conns = {},
+	_killed = false,
+	_notify = function(_,_) end, -- set by UI wiring
+}
+if typeof(getgenv)=="function" then getgenv().JinHub = HubState end
+
+local BC = Runtime.BattleConst
+local CC = Runtime.CreatureConst
+local STATUS = BC and BC.BATTLE_STATUS or {}
+local BTYPE  = BC and BC.BATTLE_TYPE or {}
+local ATYPE  = BC and BC.ACTION_TYPE or {}
+
+-- Classify battle each tick
+local function classifyBattle(battle)
+	local BDG = Runtime.BattleDataGetModule
+	local bt = battle.type
+	local catchInfo = nil
+	if BDG and BDG.getLocalPlayerCatchPetInfo then
+		local ok,ci = pcall(BDG.getLocalPlayerCatchPetInfo, battle); if ok then catchInfo=ci end
+	end
+	local selfPet
+	local mbw = Runtime.getController("MainBattleWindowController")
+	if mbw and mbw.getLocalCurrentSelfPet then
+		local ok,p = pcall(mbw.getLocalCurrentSelfPet, battle); if ok then selfPet=p end
+	end
+	return {
+		battle=battle, battleType=bt,
+		isWild   = (bt==BTYPE.PVE_PET) and (catchInfo~=nil),
+		isNpc    = (bt==BTYPE.PVE_NPC),
+		isBoss   = (bt==BTYPE.PVE_BOSS),
+		isDungeon= (bt==BTYPE.PVE_DUNGEON),
+		catchPetInfo=catchInfo,
+		selfActivePet=selfPet,
+	}
+end
+
+local function isAlive(pet)
+	if not pet then return false end
+	local BDG = Runtime.BattleDataGetModule
+	if BDG and BDG.isAliveBattlePet then
+		local ok,r = pcall(BDG.isAliveBattlePet, pet); if ok then return r end
+	end
+	return pet.aliveState == (CC and CC.AliveState and CC.AliveState.ALIVE or 1)
+end
+
+-- classify mutation of a catch target.
+-- Shiny: catchPetInfo.isShiny (set by game), fallback to PetConfig.shinyTypeId==2.
+-- Prismatic ("colorful"): colorId>0 AND patternId>0.
+local function classifyMutation(catchInfo)
+	if not catchInfo then return { shiny=false, prismatic=false } end
+	local shiny = catchInfo.isShiny == true
+	if not shiny and catchInfo.configId and Runtime.ConfigDataManager and Runtime.ConfigConst then
+		local ok,cfg = pcall(Runtime.ConfigDataManager.getConfig, Runtime.ConfigConst.ConfigName.PET, catchInfo.configId)
+		if ok and cfg and cfg.shinyTypeId == 2 then shiny = true end
+	end
+	local prismatic = (typeof(catchInfo.colorId)=="number" and catchInfo.colorId > 0)
+		and (typeof(catchInfo.patternId)=="number" and catchInfo.patternId > 0)
+	return { shiny = shiny, prismatic = prismatic and true or false }
+end
+
+local function ballOwned(itemId)
+	if not itemId then return false end
+	if itemId == Runtime.BALL.NORMAL then return true end -- infinite
+	if not Runtime.BagService then return false end
+	local ok,n = pcall(Runtime.BagService.getItemNumById, itemId)
+	return ok and typeof(n)=="number" and n > 0
+end
+
+local function pickBallForMutation(mut)
+	local cfg = HubState.ballConfig
+	local want
+	if mut.shiny and mut.prismatic then want = cfg.shinyPrismatic or cfg.prismatic or cfg.shiny
+	elseif mut.prismatic then want = cfg.prismatic
+	elseif mut.shiny then want = cfg.shiny end
+	if want and ballOwned(want) then return want end
+	return Runtime.BALL.NORMAL -- always-throwable fallback
+end
+--Action dispatch (ONLY call-site that triggers a battle operate)
+local function firstAliveBenchUid(battle)
+	local BDG = Runtime.BattleDataGetModule
+	if not (BDG and BDG.buildSelfBattlePetListForSwitch) then return nil end
+	local ok,list = pcall(BDG.buildSelfBattlePetListForSwitch, battle)
+	if not ok or typeof(list)~="table" then return nil end
+	for _,pet in ipairs(list) do
+		if pet.isInField ~= true and isAlive(pet) then return pet.uid end
+	end
+	return nil
+end
+
+-- Operate gate: the game's controller silently no-ops applyUseSkill/applySwitchPet
+local function canOperateNow(mbw)
+	if not mbw then return false end
+	if mbw.getCanOperate then
+		local ok, v = pcall(mbw.getCanOperate)
+		if ok then return v == true end
+	end
+	return true -- getter missing: assume operable (old behaviour)
+end
+
+local function doSwitch(battle, forced)
+	local mbw = Runtime.getController("MainBattleWindowController")
+	if not (mbw and mbw.applySwitchPet) then return false end
+	if not forced and not canOperateNow(mbw) then return false end
+	local uid = firstAliveBenchUid(battle)
+	if not uid then return false end
+	local pos
+	local BDG = Runtime.BattleDataGetModule
+	if forced and BDG and BDG.getLocalForceSwitchSlotPos then
+		local ok,p = pcall(BDG.getLocalForceSwitchSlotPos, battle); if ok then pos=p end
+	end
+	local ok, submitted = pcall(mbw.applySwitchPet, uid, pos, forced and true or false)
+	if not ok then return false end
+	return submitted ~= false
+end
+
+
+local function resyncIfBattleNotFound(code)
+	if code ~= 27801 then return false end
+	local BS = Runtime.BattleService
+	if BS and BS.clearBattleMirror then pcall(BS.clearBattleMirror) end
+	return true
+end
+
+local THROW_COOLDOWN = 1.6
+local function doCatch(ctx)
+	local mbw = Runtime.getController("MainBattleWindowController")
+	if not (mbw and mbw.applyCatchPetWithResult) then return false end
+	local info = ctx.catchPetInfo
+	if not info or not info.pos then return false end
+	local cs = HubState._catchState
+	local BS = Runtime.BattleService
+	local b = ctx.battle
+	-- throttle: hold off if we threw very recently (animation still playing). While we wait,
+	-- keep poking animation-complete so the lock is cleared by the time the cooldown elapses.
+	local nowc = os.clock()
+	if cs._lastThrowAt and (nowc - cs._lastThrowAt) < THROW_COOLDOWN then
+		if BS and BS.sendAnimationComplete and b then pcall(BS.sendAnimationComplete, b.round) end
+		return false, 27811   -- treat as "still animating", non-terminal, don't count
+	end
+	-- 1) clear the animation lock BEFORE throwing (the key fix)
+	if BS and BS.sendAnimationComplete and b then pcall(BS.sendAnimationComplete, b.round) end
+	local ball = pickBallForMutation(classifyMutation(info))
+	cs._lastThrowAt = os.clock()
+	local ok, code = pcall(mbw.applyCatchPetWithResult, info.pos, ball)
+	if not ok then return false end
+	-- Non-terminal codes
+	if code ~= nil and code ~= 27813 and code ~= 27814 then
+		if code == 27811 and BS and BS.sendAnimationComplete and b then
+			pcall(BS.sendAnimationComplete, b.round)
+		end
+		resyncIfBattleNotFound(code)
+		return false, code
+	end
+	return true, code   -- code: 27813=success, 27814=fail
+end
+
+local function ensureServerAuto(battle)
+	local BS = Runtime.BattleService
+	if not (BS and BS.autoBattle) then return false end
+	local st = HubState._autoBattleState
+	local buid = battle and battle.uid or "cur"
+	if st.buid == buid and st.enabled then return true end   -- already enabled this battle
+	local ok, code = pcall(BS.autoBattle, true)
+	if ok and (code == 20000 or code == nil) then
+		st.buid = buid; st.enabled = true
+		return true
+	end
+	resyncIfBattleNotFound(code)
+	return false
+end
+
+local NUDGE_COOLDOWN_NORMAL, NUDGE_COOLDOWN_FAST = 2.0, 0.4
+local _lastNudgeAt = 0
+local function nudgeStrongestSkill(ctx)
+	local mbw = Runtime.getController("MainBattleWindowController")
+	if not (mbw and mbw.applyUseSkill) then return end
+	if not canOperateNow(mbw) then return end
+	local nown = os.clock()
+	local cooldown = HubState.toggles.fastBattle and NUDGE_COOLDOWN_FAST or NUDGE_COOLDOWN_NORMAL
+	if (nown - _lastNudgeAt) < cooldown then return end
+	local self = ctx.selfActivePet
+	if not self or typeof(self.skills)~="table" then return end
+	local enemy
+	if mbw.getCurrentEnemyPet then local ok,e=pcall(mbw.getCurrentEnemyPet, ctx.battle); if ok then enemy=e end end
+	local SAM = Runtime.SkillAreaModule
+	-- energy gate for ultimates (skills with pp==nil are energy-gated ultimates)
+	local energy = 0
+	local BDG = Runtime.BattleDataGetModule
+	if BDG and BDG.getLocalPlayerTrainer then
+		local ok,tr = pcall(BDG.getLocalPlayerTrainer, ctx.battle)
+		if ok and tr and typeof(tr.energy)=="number" then energy = tr.energy end
+	end
+	local best, bestPow = nil, -1
+	if SAM and SAM.rebuildOperableSkillPowerCache then
+		local cache = { powerMap = {} }
+		pcall(SAM.rebuildOperableSkillPowerCache, cache, self, enemy, false)
+		for _,sk in ipairs(self.skills) do
+			if typeof(sk)=="table" and sk.id then
+				local ppOk = (sk.pp==nil) or (sk.pp>0)
+				local eCost = 0
+				if Runtime.ConfigDataManager and Runtime.ConfigConst then
+					local ok,cfg = pcall(Runtime.ConfigDataManager.getConfig, Runtime.ConfigConst.ConfigName.SKILL, sk.id)
+					if ok and cfg and typeof(cfg.energyCost)=="number" then eCost = cfg.energyCost end
+				end
+				local pow = cache.powerMap[sk.id]
+				if ppOk and eCost<=energy and pow and pow>bestPow then bestPow=pow; best=sk.id end
+			end
+		end
+	end
+	if best then
+		-- stamp the cooldown on EVERY attempt (even a rejected one), so a 27811 can't be
+		-- re-fired 0.15s later. The nudge is purely optional — server auto still fights.
+		_lastNudgeAt = os.clock()
+		pcall(mbw.applyUseSkill, best)
+	end
+end
+
+-- doSkill: ensure server auto is on (the reliable driver), then nudge strongest skill.
+-- Returns true if server auto is active so the loop counts it as handled.
+local function doSkill(ctx)
+	local autoOn = ensureServerAuto(ctx.battle)
+	nudgeStrongestSkill(ctx)   -- best-effort damage 
+	return autoOn
+end
+
+local function giveUpCatch(ctx)
+	local BS = Runtime.BattleService
+	if not BS or not ATYPE.GIVE_UP_CATCH then return false end
+	local info = ctx.catchPetInfo
+	local selfPos = (ctx.selfActivePet and ctx.selfActivePet.pos) or 1
+	local ok, code = pcall(BS.operateBattle, {
+		actionType = ATYPE.GIVE_UP_CATCH, sourcePos = selfPos, targetPos = info and info.pos,
+	})
+	if ok then resyncIfBattleNotFound(code) end
+	return ok
+end
+
+local function decideAndAct(ctx, tg)
+	local st = ctx.battle.status
+	local actionable = (st==STATUS.WAIT_OPERATION or st==STATUS.WAIT_FORCE_CALL
+		or st==STATUS.ROUND_START_FORCE_CALL or st==STATUS.ROUND_END_FORCE_CALL
+		or st==STATUS.CATCH_PET)
+	if not actionable then return nil end
+
+	-- 2. forced switch window (preempts all)
+	if st==STATUS.WAIT_FORCE_CALL or st==STATUS.ROUND_START_FORCE_CALL or st==STATUS.ROUND_END_FORCE_CALL then
+		if tg.autoSwitchDeadPet and doSwitch(ctx.battle, true) then return "forceswitch" end
+		return nil
+	end
+
+	-- 3. catch window (wild only) — ONLY during the dedicated CATCH_PET status.
+	if st==STATUS.CATCH_PET and ctx.isWild then
+		local info = ctx.catchPetInfo
+		local buid = ctx.battle.uid or "cur"
+		local cs = HubState._catchState
+		if cs.buid ~= buid then cs.buid = buid; cs.local_tries = 0; cs.done = false; cs.phaseStart = os.clock(); cs._lastThrowAt = nil end
+		cs.phaseStart = cs.phaseStart or os.clock()
+		local maxCatch = (info and info.maxCatchCount) or 1
+		local remain = maxCatch - cs.local_tries
+
+		-- SAFETY: if the catch phase drags on too long (throws keep getting rejected, or
+		if not cs.done and os.clock() - cs.phaseStart > 30 then
+			cs.done = true
+			if giveUpCatch(ctx) then return "giveup" end
+			return nil
+		end
+
+		local mut = classifyMutation(info)
+		--   shiny         -> mut.shiny
+		--   prismatic     -> mut.prismatic
+		--   shiny+prismatic -> mut.shiny AND mut.prismatic
+		-- If ANY mutation toggle is on, ONLY matching pets are caught (a normal is skipped),
+		-- UNLESS plain autoCatch is also explicitly on (then catch everything).
+		-- If no mutation toggle is on, plain autoCatch catches all.
+		local mutationHunt = tg.autoCatchShiny or tg.autoCatchPrismatic or tg.autoCatchShinyPrismatic
+		local matchesMutation =
+			(tg.autoCatchShiny and mut.shiny) or
+			(tg.autoCatchPrismatic and mut.prismatic) or
+			(tg.autoCatchShinyPrismatic and mut.shiny and mut.prismatic)
+		local want
+		if tg.autoCatch then
+			want = true             
+		elseif mutationHunt then
+			want = matchesMutation and true or false
+		else
+			want = false   
+		end
+		local anyCatchOn = tg.autoCatch or mutationHunt
+
+		if want and remain > 0 and not cs.done then
+			local ok, code = doCatch(ctx)
+			if ok then
+				cs.local_tries += 1
+				if code == 27813 then cs.done = true end   -- success -> stop
+				return "catch"
+			end
+			return nil
+		end
+		if st==STATUS.CATCH_PET and not cs.done then
+			cs.done = true
+			if giveUpCatch(ctx) then return "giveup" end
+		end
+		return nil
+	end
+
+	if st==STATUS.CATCH_PET and not ctx.isWild then
+		if giveUpCatch(ctx) then return "giveup" end
+		return nil
+	end
+
+
+	if st==STATUS.WAIT_OPERATION and tg.autoSwitchDeadPet and not isAlive(ctx.selfActivePet) then
+		if doSwitch(ctx.battle, false) then return "switch" end
+	end
+
+	if st==STATUS.WAIT_OPERATION and tg.autoSkill and isAlive(ctx.selfActivePet) then
+		if doSkill(ctx) then return "skill" end
+	end
+	return nil
+end
+
+-- ---- Battle recovery helpers 
+local function escapeBattle()
+	local BS = Runtime.BattleService
+	if not BS then return false end
+	local rof = Runtime.ReqOperateBattle
+	local BCc = Runtime.BattleConst
+	if rof and BCc and BCc.ACTION_TYPE and BCc.ACTION_TYPE.ESCAPE then
+		pcall(function() rof:InvokeServer({ actionType=BCc.ACTION_TYPE.ESCAPE, sourcePos=1 }) end)
+	end
+	task.wait(1.5)
+	local canEnter = select(2, pcall(BS.canEnterBattle, 1))
+	if canEnter == 20000 and BS.getCurrentBattle() ~= nil then
+		pcall(function() BS.clearBattleMirror() end)
+	end
+	return BS.getCurrentBattle() == nil
+end
+HubState.escapeBattle = escapeBattle
+
+local function repairBattleDesync()
+	local BS = Runtime.BattleService
+	if not BS then return end
+	local canEnter = select(2, pcall(BS.canEnterBattle, 1))
+	if canEnter == 27803 and BS.getCurrentBattle() == nil then
+		local rof = Runtime.ReqOperateBattle
+		local BCc = Runtime.BattleConst
+		if rof and BCc and BCc.ACTION_TYPE and BCc.ACTION_TYPE.ESCAPE then
+			pcall(function() rof:InvokeServer({ actionType=BCc.ACTION_TYPE.ESCAPE, sourcePos=1 }) end)
+		end
+		return true
+	end
+	return false
+end
+HubState.repairBattleDesync = repairBattleDesync
+
+-- ---- The single BattleLoop
+local BattleLoop = { running=false, _thread=nil, _battleUid=nil, _opArmed=true, _lastActedAt=0, _desyncCheck=0 }
+
+-- kinds that are repeatable within the same (round,status) phase
+local REPEATABLE = { catch=true, giveup=true, forceswitch=true }
+
+function BattleLoop:tick()
+	local battle = Runtime.getCurrentBattle()
+	if not battle then
+		if self._wasInBattle then
+			self._wasInBattle = false
+			if HubState.Pacing then pcall(function() HubState.Pacing:onBattleBoundary() end) end
+		end
+		HubState.currentBattle=nil; self._battleUid=nil; self._opArmed=true
+		HubState._autoBattleState.enabled=false; HubState._autoBattleState.buid=nil
+		if (HubState.toggles.farmEnabled or HubState.toggles.npcEnabled or HubState.toggles.bossEnabled or HubState.toggles.towerEnabled)
+			and os.clock()-(self._desyncCheck or 0) > 5 then
+			self._desyncCheck = os.clock()
+			pcall(function() if HubState.repairBattleDesync() then HubState._notify("Recovered stuck battle session", "ok") end end)
+		end
+		return
+	end
+	self._wasInBattle = true
+	if battle.status == STATUS.BATTLE_END then return end
+
+	local ctx = classifyBattle(battle)
+	HubState.currentBattle = { battle=battle, ctx=ctx }
+
+	local tg = HubState.toggles
+	local st = battle.status
+
+
+	if self._battleUid ~= battle.uid then
+		self._battleUid = battle.uid
+		self._opArmed = true
+		self._lastActedAt = 0
+		if HubState.Pacing then pcall(function() HubState.Pacing:reassertSpeedFlag() end) end
+		if HubState.toggles.autoSkill then pcall(ensureServerAuto, battle) end
+	end
+
+	local mbw = Runtime.getController("MainBattleWindowController")
+	local canOp = true
+	if mbw and mbw.getCanOperate then
+		local ok,v = pcall(mbw.getCanOperate); if ok then canOp = (v==true) end
+	end
+	local RETRY_AFTER = (HubState.toggles.fastBattle) and 0.35 or 2.5
+
+	if st==STATUS.WAIT_OPERATION then
+		if not canOp then
+			self._opArmed = true 
+			return
+		end
+		if not self._opArmed then
+			if os.clock() - (self._lastActedAt or 0) < RETRY_AFTER then return end
+			self._opArmed = true
+		end
+	end
+	local kind = decideAndAct(ctx, tg)
+	if kind then
+		HubState._debug.actions = (HubState._debug.actions or 0) + 1
+		HubState._debug.last = os.clock()
+		HubState._debug.lastKind = kind
+		if kind=="skill" or kind=="switch" then
+			self._opArmed = false
+			self._lastActedAt = os.clock()
+		end
+		local postActWait
+		if HubState.toggles.fastBattle then postActWait = REPEATABLE[kind] and 0.2 or 0.1
+		else postActWait = REPEATABLE[kind] and 0.6 or 0.3 end
+		task.wait(postActWait)
+	end
+end
+
+function BattleLoop:start()
+	if self.running then return end
+	self.running = true
+	self._thread = task.spawn(function()
+		while self.running and not HubState._killed do
+			local ok,err = pcall(function() self:tick() end)
+			if not ok then warn("[JinHub] BattleLoop error: "..tostring(err)) end
+			task.wait(HubState.toggles.fastBattle and 0.05 or 0.15)
+		end
+	end)
+end
+
+function BattleLoop:stop()
+	self.running = false
+end
+
+HubState.BattleLoop = BattleLoop
+HubState.Runtime = Runtime
+HubState._debug = { actions = 0 }
+HubState._catchState = { buid=nil, local_tries=0, done=false, phaseStart=nil }
+HubState._autoBattleState = { buid=nil, enabled=false }
+
+-- 4b: Engagement (movement) modules -
+local CreatureConst = (function() local m=findModule("CreatureConst"); return m and safeRequire(m) end)()
+local CSS = safeRequire(RS.SceneStorage.CreatureSceneStorage)
+Runtime.CreatureSceneStorage = CSS
+Runtime.CreatureConst2 = CreatureConst
+
+local function getCharacter()
+	local ch = player.Character
+	if not ch then return nil end
+	local hrp = ch:FindFirstChild("HumanoidRootPart")
+	local hum = ch:FindFirstChildOfClass("Humanoid")
+	return ch, hrp, hum
+end
+
+-- list currently-spawned wild pet configId
+local function liveWildPetOptions()
+	local opts = {}
+	if not (CSS and CreatureConst) then return opts end
+	local a,b = CSS.getCreatureListByType(CreatureConst.CreatureType.WILD_PET)
+	local map = (typeof(a)=="table") and a or (typeof(b)=="table") and b or nil
+	if not map then return opts end
+	local seen = {}
+	for _,e in pairs(map) do
+		if e.configId and not seen[e.configId] then
+			seen[e.configId] = true
+			local nm = "Pet "..tostring(e.configId)
+			if Runtime.ConfigDataManager and Runtime.ConfigConst then
+				local ok,cfg = pcall(Runtime.ConfigDataManager.getConfig, Runtime.ConfigConst.ConfigName.PET, e.configId)
+				if ok and cfg and cfg.name then nm = cfg.name.." ("..tostring(e.configId)..")" end
+			end
+			opts[#opts+1] = { label=nm, value=e.configId }
+		end
+	end
+	table.sort(opts, function(x,y) return x.label < y.label end)
+	return opts
+end
+
+local function familyKey(configId)
+	if typeof(configId)~="number" then return configId end
+	return configId % 100000
+end
+
+local function isShinyConfig(configId)
+	if not (Runtime.ConfigDataManager and Runtime.ConfigConst) then return false end
+	local ok,cfg = pcall(Runtime.ConfigDataManager.getConfig, Runtime.ConfigConst.ConfigName.PET, configId)
+	return ok and cfg and cfg.shinyTypeId == 2 or false
+end
+
+local function nearestWild(opts)
+	opts = opts or {}
+	if not (CSS and CreatureConst) then return nil end
+	local _,map = CSS.getCreatureListByType(CreatureConst.CreatureType.WILD_PET)
+	if typeof(map)~="table" then return nil end
+	local _,hrp = getCharacter()
+	if not hrp then return nil end
+	local myPos = hrp.Position
+	local bestUid, bestE, bestD = nil, nil, math.huge
+	for uid,e in pairs(map) do
+		if e.aliveState==CreatureConst.AliveState.ALIVE and not e.isCombating and e.pos then
+			local famOk = (opts.family==nil) or (familyKey(e.configId)==opts.family)
+			local shinyOk = (not opts.requireShiny) or isShinyConfig(e.configId)
+			if famOk and shinyOk then
+				local d = myPos - e.pos.Position
+				local flat = math.sqrt(d.X*d.X + d.Z*d.Z)
+				if flat < bestD then bestD=flat; bestUid=uid; bestE=e end
+			end
+		end
+	end
+	return bestUid, bestE, bestD
+end
+
+local function listWilds()
+	local out = {}
+	if not (CSS and CreatureConst) then return out end
+	local _,map = CSS.getCreatureListByType(CreatureConst.CreatureType.WILD_PET)
+	if typeof(map)~="table" then return out end
+	local _,hrp = getCharacter()
+	local myPos = hrp and hrp.Position
+	for uid,e in pairs(map) do
+		if e.aliveState==CreatureConst.AliveState.ALIVE and not e.isCombating and e.pos then
+			local d = myPos and (myPos - e.pos.Position) or nil
+			local flat = d and math.sqrt(d.X*d.X + d.Z*d.Z) or math.huge
+			out[#out+1] = { uid=uid, e=e, family=familyKey(e.configId), dist=flat,
+				level=tonumber(e.level) or 0 }
+		end
+	end
+	table.sort(out, function(a,b) return a.dist < b.dist end)
+	return out
+end
+
+local function teamLeadLevel()
+	local PGS = Runtime.PetGroupService
+	local PS = Runtime.PetStorage
+	if not (PGS and PS and PS.getPetList) then return 0 end
+	local gid = select(2, pcall(PGS.getCurrentGroupId)) or 1
+	local ok, grp = pcall(PGS.getPetGroupByGroupId, gid)
+	if not (ok and typeof(grp)=="table" and typeof(grp.petUuids)=="table") then return 0 end
+	local u = grp.petUuids[1] or grp.petUuids["1"]
+	local list = PS.getPetList()
+	local p = type(list)=="table" and u and list[u]
+	return p and (tonumber(p.level) or 0) or 0
+end
+
+HubState._famStats = HubState._famStats or {}
+HubState._famBlacklist = HubState._famBlacklist or {}
+local OpponentPicker = {}
+OpponentPicker.SLOW_THRESHOLD = 25 
+OpponentPicker.MAX_STRIKES = 2   
+
+function OpponentPicker.reset()
+	HubState._famStats = {}
+	HubState._famBlacklist = {}
+end
+function OpponentPicker.recordBattleResult(family, won, dur)
+	if family==nil then return end
+	local s = HubState._famStats[family]
+	if not s then s = { wins=0, losses=0, sumWinTime=0, slowStrikes=0 }; HubState._famStats[family]=s end
+	if won then
+		s.wins += 1
+		s.sumWinTime += (dur or 0)
+		if dur and dur > OpponentPicker.SLOW_THRESHOLD then s.slowStrikes += 1 end
+	else
+		s.losses += 1
+		s.slowStrikes += 1
+	end
+	if s.slowStrikes >= OpponentPicker.MAX_STRIKES then
+		HubState._famBlacklist[family] = true
+	end
+end
+function OpponentPicker.pickOwnFarmWild()
+	local wilds = listWilds()
+	if #wilds == 0 then return nil end
+	local lead = teamLeadLevel()
+	local levelCap = lead > 0 and (lead + 3) or math.huge 
+	local function score(w)
+		if HubState._famBlacklist[w.family] then return -math.huge end
+		local s = HubState._famStats[w.family]
+		local base
+		if not s or s.wins == 0 then base = 0             
+		else
+			local avg = s.sumWinTime / math.max(1, s.wins)
+			base = 1000 - avg - (s.losses * 50)              
+		end
+		if w.level > 0 and lead > 0 then
+			if w.level > levelCap then base = base - 500 - (w.level - levelCap)
+				else base = base + (levelCap - w.level) end
+			end
+		return base
+	end
+	local best, bestScore
+	for _,w in ipairs(wilds) do
+		local sc = score(w)
+		if sc > -math.huge and (bestScore==nil or sc > bestScore or (sc==bestScore and best and w.dist < best.dist)) then
+			best, bestScore = w, sc
+		end
+	end
+	if not best then return nil end 
+	return best.uid, best.e
+end
+HubState.OpponentPicker = OpponentPicker
+
+-- Engagement loop base
+local Engage = { farm={running=false}, npc={running=false}, boss={running=false} }
+
+local function claimLock(kind)
+	if HubState.activityLock == nil then HubState.activityLock = kind; return true end
+	return HubState.activityLock == kind
+end
+local function releaseLock(kind)
+	if HubState.activityLock == kind then HubState.activityLock = nil end
+end
+
+local function fireWildEntry(uid)
+	if Runtime.ReqEnterPetBattle then
+		pcall(function() Runtime.ReqEnterPetBattle:FireServer(uid) end)
+	end
+	pcall(function()
+		local b = RS:FindFirstChild("Bindable")
+		if b and b:FindFirstChild("Battle") and b.Battle:FindFirstChild("EnterPetBattle") then
+			b.Battle.EnterPetBattle:Fire(uid)
+		end
+	end)
+end
+
+local function walkAndEngageWild(uid, worldPos)
+	if Runtime.BattleService and Runtime.BattleService.canEnterBattle then
+		local ok,code = pcall(Runtime.BattleService.canEnterBattle, 1)
+		if ok and code ~= 20000 then
+			pcall(function() HubState.repairBattleDesync() end)
+			return false
+		end
+	end
+	local _, hrp = getCharacter()
+	if hrp and worldPos then
+		pcall(function() hrp.CFrame = CFrame.new(worldPos + Vector3.new(0, 4, 6)) end)
+		task.wait(0.25)
+	end
+	fireWildEntry(uid)
+	local ts=os.clock()
+	while Runtime.getCurrentBattle()==nil and os.clock()-ts < 6 do
+		if not HubState.activityLock then return false end
+		if os.clock()-ts > 3 and Runtime.getCurrentBattle()==nil then fireWildEntry(uid) end
+		task.wait(0.2)
+	end
+	if Runtime.getCurrentBattle()==nil then return false end
+	local tb=os.clock()
+	while Runtime.getCurrentBattle()~=nil and os.clock()-tb < 150 do task.wait(0.4) end
+	return true
+end
+
+--island travel
+local _islandPosCache
+local function islandAreaMap()
+	if _islandPosCache then return _islandPosCache end
+	local map = {}
+	local scene = workspace:FindFirstChild("Scene")
+	local area = scene and scene:FindFirstChild("Area")
+	if not area then return map end
+	for _,c in ipairs(area:GetChildren()) do
+		local p1 = c:FindFirstChild("1", true)
+		if p1 and p1:IsA("BasePart") then
+			local isl = tonumber(p1:GetAttribute("Island"))
+			if isl then
+				local isPlain = not (c.Name:find("Monster") or c.Name:find("SubArea"))
+				if map[isl]==nil or (isPlain and not map[isl].plain) then
+					map[isl] = { pos = p1.Position, part = p1, plain = isPlain }
+				end
+			end
+		end
+	end
+	_islandPosCache = map
+	return map
+end
+-- back-compat: {islandId -> Vector3}
+local function islandPositions()
+	local out = {}
+	for isl,v in pairs(islandAreaMap()) do out[isl] = v.pos end
+	return out
+end
+HubState.islandPositions = islandPositions
+HubState.islandAreaMap = islandAreaMap
+
+local function gotoIsland(islandId)
+	local entry = islandAreaMap()[islandId]
+	if not entry then return false end
+	local char, hrp = getCharacter()
+	if not (hrp and char) then return false end
+	pcall(function() hrp.CFrame = CFrame.new(entry.pos + Vector3.new(0, 5, 0)) end)
+	task.wait(1.0)
+	local part = entry.part
+	if part then
+		local areaId = tonumber(part:GetAttribute("AreaId"))
+		if Runtime.CommEnterArea then
+			pcall(function() Runtime.CommEnterArea:Fire(part, char, { areaId = areaId, island = islandId }) end)
+		end
+		if Runtime.ReqEnterArea then
+			pcall(function() Runtime.ReqEnterArea:FireServer(part, char) end)
+		end
+	end
+	task.wait(2.0)
+	return true
+end
+HubState.gotoIsland = gotoIsland
+
+local function npcWorldPos(npcId)
+	local scene = workspace:FindFirstChild("Scene")
+	local roots = { scene, workspace }
+	for _,root in ipairs(roots) do
+		if root then
+			for _,d in ipairs(root:GetDescendants()) do
+				if d:IsA("Model") or d:IsA("BasePart") then
+					local nid = d:GetAttribute("NpcId") or d:GetAttribute("npcId")
+					if nid and tonumber(nid)==npcId then
+						if d:IsA("Model") and d.PrimaryPart then return d.PrimaryPart.Position end
+						if d:IsA("BasePart") then return d.Position end
+						local anyPart = d:FindFirstChildWhichIsA("BasePart", true)
+						if anyPart then return anyPart.Position end
+					end
+				end
+			end
+		end
+	end
+	return nil
+end
+HubState.npcWorldPos = npcWorldPos
+
+local function talkToNpc(npcId, taskId)
+	local pos = npcWorldPos(npcId)
+	local _, hrp = getCharacter()
+	if pos and hrp then
+		pcall(function() hrp.CFrame = CFrame.new(pos + Vector3.new(0, 4, 5)) end)
+		task.wait(0.4)
+	end
+	local fired = false
+	if Runtime.talkToNpc then
+		local ok, r = pcall(Runtime.talkToNpc, npcId, taskId)
+		fired = (ok and r) or fired
+	end
+	task.wait(1.5)
+	return fired
+end
+HubState.talkToNpc = talkToNpc
+
+local function canAddPetNow()
+	local PetSvc = safeRequire(RS.Script.Pet.PetService)
+	if not (PetSvc and PetSvc.canAddPet) then return true end
+	local ok,r = pcall(PetSvc.canAddPet)
+	if not ok then return false end
+	return r == true or r == 20000
+end
+
+function Engage.farm.start()
+	if Engage.farm.running then return end
+	Engage.farm.running = true
+	task.spawn(function()
+		while HubState.toggles.farmEnabled and not HubState._killed do
+			if not claimLock("farm") then task.wait(1); continue end
+			if Runtime.getCurrentBattle() ~= nil then task.wait(0.5); continue end
+			if not canAddPetNow() then
+				if HubState.toggles.autoRelease and HubState.Feature and HubState.Feature.autoReleasePass then
+					releaseLock("farm")
+					local freed = 0
+					pcall(function() freed = HubState.Feature.autoReleasePass() or 0 end)
+					if freed > 0 then
+						HubState._notify("Storage full — released "..freed.." to make room", "ok")
+						task.wait(0.5); continue
+					end
+				end
+				HubState._notify("Pet storage full — farm paused (enable Auto Release)", "err")
+				releaseLock("farm"); task.wait(3); continue
+			end
+
+			local tg = HubState.toggles
+			local family = tg.farmTargetConfigId and familyKey(tg.farmTargetConfigId) or nil
+
+			local shinyHuntOnly = tg.autoCatchShiny and not tg.autoCatch
+				and not tg.autoCatchPrismatic and not tg.autoCatchShinyPrismatic
+
+			local ownLevel = tg._ownFeedLoop and not tg.farmTargetConfigId and not shinyHuntOnly
+			local uid, e
+			if ownLevel then
+				uid, e = OpponentPicker.pickOwnFarmWild()
+				if not uid then uid, e = nearestWild({}) end
+			else
+				uid, e = nearestWild({ family=family, requireShiny=shinyHuntOnly })
+			end
+			if not uid then
+				HubState._notify(shinyHuntOnly and "Shiny hunt: scanning..." or "Farm: waiting for target...", nil)
+				releaseLock("farm"); task.wait(2); continue
+			end
+
+			-- own-leveling
+			local function petCount()
+				local PS = Runtime.PetStorage
+				local ok,list = pcall(function() return PS and PS.getPetList and PS.getPetList() end)
+				local n = 0; if ok and type(list)=="table" then for _ in pairs(list) do n+=1 end end
+				return n
+			end
+			local engFamily = ownLevel and familyKey(e.configId) or nil
+			local beforeCount = ownLevel and petCount() or 0
+			local t0 = ownLevel and os.clock() or 0
+
+			HubState._notify("Engaging wild "..tostring(uid), "ok")
+			walkAndEngageWild(uid, e.pos.Position)
+			task.wait(1) -- settle before next
+
+			if ownLevel then
+				local dur = os.clock() - t0
+				local won = petCount() > beforeCount 
+				pcall(function() OpponentPicker.recordBattleResult(engFamily, won, dur) end)
+				local target = HubState._ownFeedTargetUuid
+				if won and target and HubState.Feature then
+					pcall(function()
+						HubState.Feature.releaseJunkForFruit(target)
+						task.wait(0.3)
+						HubState.Feature.feedFruitList(target)
+					end)
+				end
+			end
+		end
+		releaseLock("farm")
+		Engage.farm.running = false
+	end)
+end
+
+local DialogueService = safeRequire(RS.Script.Dialogue.DialogueService)
+
+local _npcListCache
+local function challengeableNpcs()
+	if _npcListCache then return _npcListCache end
+	local CDM, CCn = Runtime.ConfigDataManager, Runtime.ConfigConst
+	if not (CDM and CCn) then return {} end
+	local ok, npcTable = pcall(CDM.getTable, CCn.ConfigName.NPC)
+	if not ok or typeof(npcTable)~="table" then return {} end
+	local function getTalk(id) local o,c=pcall(CDM.getConfig, CCn.ConfigName.TALK, id); return o and c or nil end
+	local list = {}
+	for id, npc in pairs(npcTable) do
+		local seen, stack, found = {}, {}, nil
+		for _,t in ipairs(npc.npcInitialDialogueId or {}) do stack[#stack+1]=t end
+		while #stack > 0 do
+			local tid = table.remove(stack)
+			if not seen[tid] then seen[tid]=true
+				local node = getTalk(tid)
+				if node then
+					if node.battleId then found=node.battleId; break end
+					for _,nx in ipairs(node.nextTalkIds or {}) do stack[#stack+1]=nx end
+				end
+			end
+		end
+		if found then
+			list[#list+1] = { npcId=id, name=npc.npcName or ("NPC "..id), isBoss=npc.isBoss==1, battleId=found }
+		end
+	end
+	table.sort(list, function(a,b) return a.name < b.name end)
+	_npcListCache = list
+	return list
+end
+
+local function npcOptions(bossOnly)
+	local opts = {}
+	for _,n in ipairs(challengeableNpcs()) do
+		if (bossOnly and n.isBoss) or (not bossOnly and not n.isBoss) then
+			opts[#opts+1] = { label=n.name.." ("..tostring(n.npcId)..")", value=n.npcId }
+		end
+	end
+	return opts
+end
+
+local function npcById(npcId)
+	for _,n in ipairs(challengeableNpcs()) do if n.npcId==npcId then return n end end
+	return nil
+end
+
+local function currentLeadPetUid()
+	local PS = Runtime.PetStorage
+	if PS and PS.getMainPet then
+		local ok,mp = pcall(PS.getMainPet)
+		if ok and mp then
+			if typeof(mp)=="string" then return mp end
+			if typeof(mp)=="table" then return mp.uid or mp.uuid end
+		end
+	end
+	-- fallbac
+	if PS and PS.getPetList then
+		local ok,list=pcall(PS.getPetList)
+		if ok then for uid,_ in pairs(list) do return uid end end
+	end
+	return nil
+end
+
+-- challenge an NPC
+local function challengeNpc(n)
+	local BS = Runtime.BattleService
+	if not (BS and BS.enterActualNpcBattle) then return false end
+	-- pre-flight
+	local battleType
+	if DialogueService and DialogueService.getBattleTypeByBattleId then
+		local ok,bt = pcall(DialogueService.getBattleTypeByBattleId, n.battleId); if ok then battleType=bt end
+	end
+	if battleType and BS.canEnterBattle then
+		local ok,code = pcall(BS.canEnterBattle, battleType)
+		if ok and code ~= 20000 then return false end
+	end
+	local leadUid = currentLeadPetUid()
+	if not leadUid then return false end
+	pcall(BS.enterActualNpcBattle, n.npcId, n.battleId, leadUid)
+	local ts=os.clock()
+	while Runtime.getCurrentBattle()==nil and os.clock()-ts < 6 do task.wait(0.2) end
+	if Runtime.getCurrentBattle()==nil then return false end
+	local tb=os.clock()
+	while Runtime.getCurrentBattle()~=nil and os.clock()-tb < 150 do task.wait(0.4) end
+	return true
+end
+
+-- AUTO NPC
+function Engage.npc.start()
+	if Engage.npc.running then return end
+	Engage.npc.running = true
+	task.spawn(function()
+		while HubState.toggles.npcEnabled and not HubState._killed do
+			if not claimLock("npc") then task.wait(1); continue end
+			if Runtime.getCurrentBattle()~=nil then task.wait(0.5); continue end
+			local n = HubState.toggles.npcTargetId and npcById(HubState.toggles.npcTargetId)
+			if not n then
+				HubState._notify("Auto NPC: pick a target NPC", nil)
+				releaseLock("npc"); task.wait(2); continue
+			end
+			HubState._notify("Challenging "..n.name, "ok")
+			local fought = challengeNpc(n)
+			if not fought then releaseLock("npc"); task.wait(2)
+			else task.wait(1.2) end
+		end
+		releaseLock("npc")
+		Engage.npc.running = false
+	end)
+end
+
+-- AUTO BOSS
+function Engage.boss.start()
+	if Engage.boss.running then return end
+	Engage.boss.running = true
+	task.spawn(function()
+		while HubState.toggles.bossEnabled and not HubState._killed do
+			if not claimLock("boss") then task.wait(1); continue end
+			if Runtime.getCurrentBattle()~=nil then task.wait(0.5); continue end
+			local tgt = HubState.toggles.bossTargetId
+			local n = tgt and (HubState.bossById(tgt) or npcById(tgt))
+			if not n then
+				HubState._notify("Auto Boss: pick a target boss", nil)
+				releaseLock("boss"); task.wait(3); continue
+			end
+			-- if auto-hop is handling an unavailable boss, don't spam-challenge it here
+			if HubState.Feature and HubState.Feature.isBossAvailable and not HubState.Feature.isBossAvailable(n.npcId) then
+				releaseLock("boss"); task.wait(3); continue
+			end
+			HubState._notify("Boss: challenging "..n.name, "ok")
+			local fought = challengeNpc(n)
+			-- bosses are hourly-limited; back off longer between attempts
+			releaseLock("boss")
+			task.wait(fought and 3 or 15)
+		end
+		releaseLock("boss")
+		Engage.boss.running = false
+	end)
+end
+
+HubState.Engage = Engage
+HubState.liveWildPetOptions = liveWildPetOptions
+HubState.familyKey = familyKey
+HubState.walkAndEngageWild = walkAndEngageWild
+HubState.nearestWild = nearestWild
+HubState.npcOptions = npcOptions
+HubState.challengeableNpcs = challengeableNpcs
+HubState.currentLeadPetUid = currentLeadPetUid
+local Pacing = { mode="normal" }
+do
+	local mbw = Runtime.getController("MainBattleWindowController")
+	Pacing._mbw = mbw
+	Pacing._origSpeedFn = mbw and mbw.getBattlePlaybackSpeed
+	local bcc = findModule("BattleChoreoConst")
+	Pacing._BCC = bcc and safeRequire(bcc)
+	Pacing._origWaits = {}       -- numeric top-level delay constants
+	Pacing._origWaitTbls = {}    -- by-type delay tables (per-action / per-settle-node)
+	if Pacing._BCC then
+		for _,k in ipairs({"DefaultActionWaitTime","SettleNodeWaitTime","StartBattleBeforeChoreographyDelayTime",
+			"FirstRoundEmptyActionResultsAnimationCompleteDelay","ForceSwitchAnimationCompleteDelay",
+			"OpeningThrowBallPreDelay","OpeningThrowBallPostDelay"}) do
+			Pacing._origWaits[k] = Pacing._BCC[k]
+		end
+		for _,k in ipairs({"ActionWaitTimeByType","SettleNodeWaitTimeByType"}) do
+			if typeof(Pacing._BCC[k])=="table" then
+				local save = {}
+				for kk,v in pairs(Pacing._BCC[k]) do if typeof(v)=="number" then save[kk]=v end end
+				Pacing._origWaitTbls[k] = save
+			end
+		end
+	end
+end
+
+function Pacing:setWaits(scale)
+	if not self._BCC then return end
+	for k,orig in pairs(self._origWaits) do
+		if typeof(orig)=="number" then self._BCC[k] = orig * scale end
+	end
+	for k,saved in pairs(self._origWaitTbls or {}) do
+		if typeof(self._BCC[k])=="table" then
+			for kk,orig in pairs(saved) do self._BCC[k][kk] = orig * scale end
+		end
+	end
+end
+
+function Pacing:_waitScaleForMode()
+	if self.mode=="autoSkip" then return 0.2 end
+	if self.mode=="fastBattle" then return 0 end 
+	return 1
+end
+
+function Pacing:_speedForMode()
+	if self.mode=="normal" then return nil end -- use native
+	if self.mode=="fastBattle" then return 8 end
+	return 2
+end
+
+-- Battle-speed bypass levers
+function Pacing:installReporterHook()
+	if self._reporterHooked then return end
+	local R = Runtime.AnimCompleteReporter
+	if not (R and typeof(R.beginExpectation)=="function" and typeof(R.reportComplete)=="function") then return end
+	self._origBeginExpectation = R.beginExpectation
+	R.beginExpectation = function(uid, round, ...)
+		self._origBeginExpectation(uid, round, ...)
+		task.defer(function() pcall(function() R.reportComplete(uid, round, "jinhub_fast") end) end)
+	end
+	self._reporterHooked = true
+end
+function Pacing:removeReporterHook()
+	if not self._reporterHooked then return end
+	local R = Runtime.AnimCompleteReporter
+	if R and self._origBeginExpectation then pcall(function() R.beginExpectation = self._origBeginExpectation end) end
+	self._reporterHooked = false
+end
+
+function Pacing:installOpeningSkip()
+	if self._openingHooked then return end
+	local mbw = self._mbw or Runtime.getController("MainBattleWindowController")
+	self._mbw = mbw
+	if not (mbw and typeof(mbw.playBattleMainEnterAnimation)=="function") then return end
+	self._origMainEnter = mbw.playBattleMainEnterAnimation
+	mbw.playBattleMainEnterAnimation = function(cb, ...)
+		if typeof(cb)=="function" then task.defer(cb) end   -- fire entrance-done at once, no animation
+	end
+	self._openingHooked = true
+end
+function Pacing:removeOpeningSkip()
+	if not self._openingHooked then return end
+	local mbw = self._mbw or Runtime.getController("MainBattleWindowController")
+	if mbw and self._origMainEnter then pcall(function() mbw.playBattleMainEnterAnimation = self._origMainEnter end) end
+	self._openingHooked = false
+end
+
+function Pacing:installSwitchSkip()
+	if self._switchHooked then return end
+	local vfx = Runtime.BattleNPCVisualEffectController
+	if not (vfx and typeof(vfx.playThrowBall)=="function" and typeof(vfx.playCatchBall)=="function") then return end
+	self._origPlayThrowBall = vfx.playThrowBall
+	self._origPlayCatchBall = vfx.playCatchBall
+	vfx.playThrowBall = function(p1, p2, p3, p4)
+		if typeof(p3)=="function" then task.defer(p3) end
+	end
+	vfx.playCatchBall = function(p1, p2, p3, p4, p5)
+		if typeof(p4)=="function" then task.defer(p4) end
+	end
+	self._switchHooked = true
+end
+function Pacing:removeSwitchSkip()
+	if not self._switchHooked then return end
+	local vfx = Runtime.BattleNPCVisualEffectController
+	if vfx then
+		if self._origPlayThrowBall then pcall(function() vfx.playThrowBall = self._origPlayThrowBall end) end
+		if self._origPlayCatchBall then pcall(function() vfx.playCatchBall = self._origPlayCatchBall end) end
+	end
+	self._switchHooked = false
+end
+
+function Pacing:zeroSkillFinishWaitTimes()
+	if self._skillWaitZeroed then return end
+	local Cfg = Runtime.SkillPerformanceCfg
+	if typeof(Cfg) ~= "table" then return end
+	self._skillWaitOrig = {}
+	for skillId, cfg in pairs(Cfg) do
+		if typeof(cfg)=="table" and typeof(cfg.finishWaitTime)=="number" then
+			self._skillWaitOrig[skillId] = cfg.finishWaitTime
+			cfg.finishWaitTime = 0
+		end
+	end
+	self._skillWaitZeroed = true
+end
+function Pacing:restoreSkillFinishWaitTimes()
+	if not self._skillWaitZeroed then return end
+	local Cfg = Runtime.SkillPerformanceCfg
+	if typeof(Cfg)=="table" then
+		for skillId, orig in pairs(self._skillWaitOrig or {}) do
+			local cfg = Cfg[skillId]
+			if typeof(cfg)=="table" then cfg.finishWaitTime = orig end
+		end
+	end
+	self._skillWaitOrig = {}
+	self._skillWaitZeroed = false
+end
+
+function Pacing:installCaptureSkip()
+	if self._captureHooked then return end
+	local ctrl = Runtime.getController("CaptureNotificationController")
+	if not (ctrl and typeof(ctrl.openWindow)=="function") then return end
+	self._origOpenWindow = ctrl.openWindow
+	ctrl.openWindow = function(p1, p2, p3, p4)
+		if typeof(p3)=="function" then task.defer(p3) end
+		return 0 -- ErrorCode.SUCCEEDED
+	end
+	self._captureCtrl = ctrl
+	self._captureHooked = true
+end
+function Pacing:removeCaptureSkip()
+	if not self._captureHooked then return end
+	if self._captureCtrl and self._origOpenWindow then
+		pcall(function() self._captureCtrl.openWindow = self._origOpenWindow end)
+	end
+	self._captureHooked = false
+end
+
+function Pacing:_speedStateTable()
+	if self._speedState ~= nil then return self._speedState or nil end
+	local mbw = self._mbw or Runtime.getController("MainBattleWindowController")
+	self._mbw = mbw
+	local ok, tbl = pcall(function()
+		if mbw and typeof(mbw.isBattleSpeedEnabled)=="function" and debug and debug.getupvalue then
+			local v = debug.getupvalue(mbw.isBattleSpeedEnabled, 1)
+			if typeof(v)=="table" then return v end
+		end
+		return nil
+	end)
+	self._speedState = (ok and typeof(tbl)=="table") and tbl or false
+	return self._speedState or nil
+end
+function Pacing:reassertSpeedFlag()
+	if self.mode ~= "fastBattle" and self.mode ~= "speed2x" then return end
+	local st = self:_speedStateTable()
+	if st then st.battleSpeedEnabled = true end
+end
+function Pacing:enableServer2x()
+	local st = self:_speedStateTable()
+	if st then st.battleSpeedEnabled = true end
+	if Runtime.SettingService and typeof(Runtime.SettingService.ReqUpdateSetting)=="function" then
+		pcall(function() Runtime.SettingService.ReqUpdateSetting("BattleSpeed", 1) end)
+	end
+end
+function Pacing:disableServer2x()
+	local st = self:_speedStateTable()
+	if st then st.battleSpeedEnabled = false end
+	if Runtime.SettingService and typeof(Runtime.SettingService.ReqUpdateSetting)=="function" then
+		pcall(function() Runtime.SettingService.ReqUpdateSetting("BattleSpeed", 0) end)
+	end
+end
+
+function Pacing:restoreAll()
+	self:removeReporterHook()
+	self:removeOpeningSkip()
+	self:removeSwitchSkip()
+	self:removeCaptureSkip()
+	pcall(function() if self._mbw and self._origSpeedFn then self._mbw.getBattlePlaybackSpeed = self._origSpeedFn end end)
+	pcall(function() self:setWaits(1) end)
+	pcall(function() self:restoreSkillFinishWaitTimes() end)
+	pcall(function() self:disableServer2x() end)
+end
+
+function Pacing:apply(mode)
+	self.mode = mode
+	HubState.toggles.fastBattle    = (mode=="fastBattle")
+	HubState.toggles.battleSpeed2x = (mode=="speed2x")
+	HubState.toggles.autoSkipNormal= (mode=="autoSkip")
+	local mbw = self._mbw or Runtime.getController("MainBattleWindowController")
+	self._mbw = mbw
+	local sp = self:_speedForMode()
+	if mbw then
+		if sp then mbw.getBattlePlaybackSpeed = function() return sp end
+		elseif self._origSpeedFn then mbw.getBattlePlaybackSpeed = self._origSpeedFn end
+	end
+	if mode=="fastBattle" then
+		self:installReporterHook()
+		self:installOpeningSkip()
+		self:installSwitchSkip()
+		self:installCaptureSkip()
+		self:enableServer2x()
+	elseif mode=="speed2x" then
+		self:removeReporterHook()
+		self:removeOpeningSkip()
+		self:removeSwitchSkip()
+		self:removeCaptureSkip()
+		self:enableServer2x()
+	else
+		self:removeReporterHook()
+		self:removeOpeningSkip()
+		self:removeSwitchSkip()
+		self:removeCaptureSkip()
+		self:disableServer2x()
+	end
+	if Runtime.getCurrentBattle()==nil then
+		self:setWaits(self:_waitScaleForMode())
+		if mode=="fastBattle" then self:zeroSkillFinishWaitTimes() else self:restoreSkillFinishWaitTimes() end
+	end
+end
+
+-- called by BattleLoo
+function Pacing:onBattleBoundary()
+	self:setWaits(self:_waitScaleForMode())
+	if self.mode=="fastBattle" then self:zeroSkillFinishWaitTimes() else self:restoreSkillFinishWaitTimes() end
+end
+
+HubState.Pacing = Pacing
+HubState._battleSpeed = { restore = function() pcall(function() Pacing:restoreAll() end) end }
+
+
+-- SECTION 4c — FEATURE MODULES (Utilities / Rewards / Merchant / Boss-hop /
+
+local HttpService = game:GetService("HttpService")
+local Feature = {}
+HubState.Feature = Feature
+
+-- CLEAN UP UI — recover from a stuck battle / lingering battle windows.
+local function resolveUIManager()
+	if HubState._UIManager ~= nil then return HubState._UIManager, HubState._UIConst end
+	local UIManager, UIConst
+	for _,d in ipairs(RS:GetDescendants()) do
+		if not UIManager and d.Name=="UIManager" and d:IsA("ModuleScript") then UIManager=safeRequire(d) end
+		if not UIConst and d.Name=="UIConst" and d:IsA("ModuleScript") then UIConst=safeRequire(d) end
+		if UIManager and UIConst then break end
+	end
+	HubState._UIManager = UIManager or false
+	HubState._UIConst = UIConst or false
+	return HubState._UIManager, HubState._UIConst
+end
+
+function Feature.cleanUpUI()
+	local closed = {}
+	local BCC = Runtime.BattleChoreoConst
+	local choreo = Runtime.getController("BattleChoreoController")
+	if choreo and choreo.forceAbortBattle and BCC and BCC.FORCE_ABORT_REASON then
+		pcall(choreo.forceAbortBattle, BCC.FORCE_ABORT_REASON.QUEUE_STALLED, { source="JinHubCleanUp" })
+	end
+	pcall(function() HubState.repairBattleDesync() end)
+	if Runtime.getCurrentBattle() ~= nil then pcall(function() HubState.escapeBattle() end) end
+	local UIManager, UIConst = resolveUIManager()
+	if UIManager and UIManager.close and UIConst and UIConst.UIEnum then
+		for _,name in ipairs({ "BattleCatchPetWindow","MainBattleWindow","BattleStartWindow",
+			"CatchTipWindow","BattlePetWindow","BattleItemWindow","BattleTeammatesWindow","BattleRulesWindow" }) do
+			local enum = UIConst.UIEnum[name]
+			if enum ~= nil then
+				local isOpen = UIManager.isOpen and select(2, pcall(UIManager.isOpen, enum))
+				if isOpen then
+					pcall(UIManager.close, enum)
+					closed[#closed+1] = name
+				end
+			end
+		end
+	end
+	HubState._catchState.buid=nil; HubState._catchState.done=false; HubState._catchState.local_tries=0; HubState._catchState.phaseStart=nil
+	HubState._autoBattleState.enabled=false; HubState._autoBattleState.buid=nil
+	if HubState.BattleLoop then HubState.BattleLoop._battleUid=nil; HubState.BattleLoop._opArmed=true end
+	HubState._notify(#closed>0 and ("Cleaned UI ("..table.concat(closed,", ")..")") or "Cleaned up battle state", "ok")
+	return true
+end
+
+do
+	local running=false
+	function Feature.startCleanUpWatchdog()
+		if running then return end
+		running=true
+		task.spawn(function()
+			local lastBuid, lastStatus, stuckSince = nil, nil, os.clock()
+			while not HubState._killed do
+				if HubState.toggles.autoCleanUp then
+					local b = Runtime.getCurrentBattle()
+					if b then
+						local sig = tostring(b.uid).."/"..tostring(b.status)
+						if sig ~= (tostring(lastBuid).."/"..tostring(lastStatus)) then
+							lastBuid, lastStatus = b.uid, b.status; stuckSince = os.clock()
+						elseif os.clock()-stuckSince > 45 then
+							HubState._notify("Battle stalled — auto cleaning up", "err")
+							pcall(Feature.cleanUpUI)
+							stuckSince = os.clock()
+						end
+					else
+						lastBuid, lastStatus, stuckSince = nil, nil, os.clock()
+					end
+				end
+				task.wait(3)
+			end
+			running=false
+		end)
+	end
+end
+
+-- 4c.1  UTILITIES — Claim all chests / Anti-AFK / FPS boost  (plan 07)
+function Feature.claimAllChests()
+	local CS = Runtime.ChestService
+	if not (CS and CS.getChests and CS.applyClaimExploreReward) then
+		HubState._notify("Chest service unavailable", "err"); return
+	end
+	local ok, chests = pcall(CS.getChests)
+	if not ok or typeof(chests)~="table" then HubState._notify("No chests found", nil); return end
+	local myId = player.UserId
+	local claimed, tried = 0, 0
+	for uid, pub in pairs(chests) do
+		if HubState._killed then break end
+		local owner
+		if typeof(pub)=="table" and pub.get then local o,v=pcall(pub.get, pub, "owner"); if o then owner=v end end
+		local claimable = (owner==nil or owner==myId)
+		if claimable then
+			local reg = true
+			if CS.isChest then local o,v=pcall(CS.isChest, uid); if o then reg=v end end
+			if reg then
+				tried += 1
+				local o,code = pcall(CS.applyClaimExploreReward, uid)
+				if o and code==20000 then claimed += 1 end
+				task.wait(0.15)
+			end
+		end
+	end
+	HubState._notify(("Chests: claimed %d/%d"):format(claimed, tried), claimed>0 and "ok" or nil)
+end
+
+-- Anti-AFK
+do
+	local antiAfkConn
+	function Feature.setAntiAfk(on)
+		HubState.toggles.antiAfk = on and true or false
+		if on and not antiAfkConn then
+			local VU = game:GetService("VirtualUser")
+			antiAfkConn = player.Idled:Connect(function()
+				if not HubState.toggles.antiAfk or HubState._killed then return end
+				pcall(function() VU:CaptureController(); VU:ClickButton2(Vector2.new()) end)
+			end)
+			table.insert(HubState._conns, antiAfkConn)
+		end
+	end
+end
+
+-- FPS boost
+do
+	local fpsConn
+	local function suppress(d)
+		if d:IsA("ParticleEmitter") or d:IsA("Trail") or d:IsA("Smoke") or d:IsA("Fire")
+			or d:IsA("Sparkles") or d:IsA("Beam") then
+			pcall(function() d.Enabled=false end)
+		elseif d:IsA("PointLight") or d:IsA("SpotLight") or d:IsA("SurfaceLight") then
+			pcall(function() d.Enabled=false end)
+		end
+	end
+	function Feature.setFpsBoost(on)
+		HubState.toggles.fpsBoost = on and true or false
+		if not on then
+			if fpsConn then fpsConn:Disconnect(); fpsConn=nil end
+			return
+		end
+		pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
+		local Lighting = game:GetService("Lighting")
+		pcall(function()
+			Lighting.GlobalShadows=false; Lighting.FogEnd=9e9
+			for _,e in ipairs(Lighting:GetChildren()) do
+				if e:IsA("BloomEffect") or e:IsA("SunRaysEffect") or e:IsA("DepthOfFieldEffect") or e:IsA("BlurEffect") then
+					e.Enabled=false
+				end
+			end
+		end)
+		local Terrain = workspace:FindFirstChildOfClass("Terrain")
+		if Terrain then pcall(function()
+			Terrain.Decoration=false; Terrain.WaterWaveSize=0; Terrain.WaterWaveSpeed=0; Terrain.WaterReflectance=0
+		end) end
+		for _,d in ipairs(workspace:GetDescendants()) do suppress(d) end
+		fpsConn = workspace.DescendantAdded:Connect(function(d)
+			if HubState._killed or not HubState.toggles.fpsBoost then return end
+			suppress(d)
+		end)
+		table.insert(HubState._conns, fpsConn)
+		HubState._notify("FPS boost applied", "ok")
+	end
+end
+
+
+--  REWARDS — Battlepass / Level / Pet-Index auto-claim
+local function claimBattlePass()
+	local BP = Runtime.BattlePassService
+	if not (BP and BP.getSeasonData and BP.reqClaimBattlePassReward) then return "unavailable" end
+	local ok, sc, season = pcall(BP.getSeasonData)
+	if not ok or sc~=20000 or typeof(season)~="table" then return "unavailable" end
+	local level = season.level or 0
+	local freeClaimable = level > (season.freeClaimedIndex or 0)
+	local premClaimable = season.isPremiumUnlocked and (level > (season.premiumClaimedIndex or 0)) or false
+	if not (freeClaimable or premClaimable) then return "empty" end
+	local o = pcall(BP.reqClaimBattlePassReward, season.passId)
+	return o and "claimed" or "empty"
+end
+
+local function claimLevelReward()
+	local PLR = Runtime.LevelRewardService
+	if not (PLR and PLR.applyClaimPlayerLevelReward) then return "unavailable" end
+	if PLR.canClaimAnyReward then
+		local ok, any = pcall(PLR.canClaimAnyReward)
+		if ok and any==false then return "empty" end
+	end
+	local o = pcall(PLR.applyClaimPlayerLevelReward)
+	return o and "claimed" or "empty"
+end
+
+-- Pet index
+local function claimPetIndex()
+	local PM = Runtime.PetManualService
+	if not (PM and PM.applyClaimAllRewards) then return "unavailable" end
+	if PM.getAllRewardStates then
+		local ok, states = pcall(PM.getAllRewardStates)
+		if ok and typeof(states)=="table" then
+			local waiting=0
+			for _,v in pairs(states) do if v==2 then waiting=waiting+1 end end
+			if waiting==0 then return "empty" end
+		end
+	end
+	local o = pcall(PM.applyClaimAllRewards)
+	return o and "claimed" or "empty"
+end
+
+function Feature.claimAllRewardsNow()
+	local claimed, empty = {}, 0
+	local r
+	r = claimBattlePass(); if r=="claimed" then claimed[#claimed+1]="Battlepass" elseif r=="empty" then empty+=1 end; task.wait(0.3)
+	r = claimLevelReward(); if r=="claimed" then claimed[#claimed+1]="Level" elseif r=="empty" then empty+=1 end; task.wait(0.3)
+	r = claimPetIndex();   if r=="claimed" then claimed[#claimed+1]="Index" elseif r=="empty" then empty+=1 end
+	if #claimed>0 then
+		HubState._notify("Claimed: "..table.concat(claimed, ", "), "ok")
+	else
+		HubState._notify("Nothing to claim right now", nil)
+	end
+end
+
+do
+	local running=false
+	function Feature.startRewardsLoop()
+		if running then return end
+		running=true
+		task.spawn(function()
+			while not HubState._killed do
+				local tg = HubState.toggles
+				if tg.autoClaimBattlepass or tg.autoClaimLevel or tg.autoClaimIndex then
+					local claimed = {}
+						if tg.autoClaimBattlepass then local ok,r=pcall(claimBattlePass); if ok and r=="claimed" then claimed[#claimed+1]="Battlepass" end; task.wait(0.3) end
+					if tg.autoClaimLevel      then local ok,r=pcall(claimLevelReward); if ok and r=="claimed" then claimed[#claimed+1]="Level" end; task.wait(0.3) end
+					if tg.autoClaimIndex      then local ok,r=pcall(claimPetIndex); if ok and r=="claimed" then claimed[#claimed+1]="Index" end; task.wait(0.3) end
+						if #claimed>0 then HubState._notify("Auto-claimed: "..table.concat(claimed, ", "), "ok") end
+				end
+				task.wait(30)
+			end
+			running=false
+		end)
+	end
+end
+
+-- 4c.3  MERCHANT — Traveling merchant items / auto-buy / buy-all
+local function merchantRows()
+	local CShop = Runtime.CommShopService
+	if not (CShop and CShop.getWindowCoreData) then return nil end
+	local ok, core = pcall(CShop.getWindowCoreData, Runtime.SHOP_TYPE_MERCHANT, 1, nil)
+	if not ok or typeof(core)~="table" then return nil end
+	return core
+end
+
+local function isPurchasable(row)
+	return row.isUnlimitedStock or (typeof(row.remainStock)=="number" and row.remainStock>0)
+end
+
+-- {label,value=goodsId} options for the dropdown, with live stock text
+function Feature.merchantOptions()
+	local opts = {}
+	local core = merchantRows()
+	if not core or typeof(core.goodsList)~="table" then return opts end
+	for _,row in ipairs(core.goodsList) do
+		local nm = row.name or ("Goods "..tostring(row.goodsId))
+		local stk = row.displayStockText
+		if not stk then
+			if row.isUnlimitedStock then stk = "∞" else stk = tostring(row.remainStock or 0).."/"..tostring(row.shopLimitNum or 0) end
+		end
+		opts[#opts+1] = { label = nm.."  ["..stk.."]", value = row.goodsId }
+	end
+	return opts
+end
+
+-- buy one goods id 
+local function buyGoods(core, goodsId, count)
+	local CShop, Shop, CSC = Runtime.CommShopService, Runtime.ShopService, Runtime.CommShopConst
+	if not (Shop and Shop.applyPurchaseGoods) then return nil end
+	if CShop and CShop.checkPurchasableWithCore and CSC and CSC.PURCHASE_CHECK_CODE then
+		local ok, chk = pcall(CShop.checkPurchasableWithCore, core, goodsId, count)
+		if ok and typeof(chk)=="table" and chk.code ~= CSC.PURCHASE_CHECK_CODE.OK then return chk.code end
+	end
+	local ok, code = pcall(Shop.applyPurchaseGoods, goodsId, count)
+	return ok and code or nil
+end
+
+-- Buy every purchasable merchant item once.
+function Feature.buyAllMerchant()
+	local core = merchantRows()
+	if not core or typeof(core.goodsList)~="table" then HubState._notify("Merchant unavailable here", nil); return end
+	local bought=0
+	for _,row in ipairs(core.goodsList) do
+		if HubState._killed then break end
+		if isPurchasable(row) then
+			local code = buyGoods(core, row.goodsId, 1)
+			if code==20000 then bought+=1 end
+			task.wait(0.3)
+			core = merchantRows() or core -- refresh stock between buys
+		end
+	end
+	HubState._notify(bought>0 and ("Merchant: bought "..bought) or "Nothing to buy", bought>0 and "ok" or nil)
+end
+
+do
+	local running=false
+	function Feature.startMerchantLoop()
+		if running then return end
+		running=true
+		task.spawn(function()
+			while not HubState._killed do
+				if HubState.toggles.autoBuy then
+					local core = merchantRows()
+					if core and typeof(core.goodsList)=="table" then
+						for _,row in ipairs(core.goodsList) do
+							if HubState._killed or not HubState.toggles.autoBuy then break end
+							if isPurchasable(row) then
+								buyGoods(core, row.goodsId, 1); task.wait(0.3)
+								core = merchantRows() or core
+							end
+						end
+					end
+				end
+				task.wait(45) -- daily lineup; resting poll is plenty
+			end
+			running=false
+		end)
+	end
+end
+
+-- PETS — inventory read / grade / lock / release
+local GRADE_BY_TALENT = { [1]="C", [2]="B", [3]="A", [4]="S", [5]="SSS", [6]="D" }
+
+local function petIsShiny(pet)
+	if not (Runtime.ConfigDataManager and Runtime.ConfigConst and Runtime.PetConst) then return false end
+	local ok,cfg = pcall(Runtime.ConfigDataManager.getConfig, Runtime.ConfigConst.ConfigName.PET, pet.configId)
+	return (ok and cfg and cfg.shinyTypeId == (Runtime.PetConst.ShinyType.SHINY or 2)) and true or false
+end
+local function petIsPrismatic(pet) return pet.colorful ~= nil end
+local function petGrade(pet) return GRADE_BY_TALENT[pet.talentId] end
+
+-- returns a fresh dict
+local function getPetMap()
+	local PS = Runtime.PetStorage
+	if not (PS and PS.getPetList) then return nil end
+	local ok, m = pcall(PS.getPetList)
+	return (ok and typeof(m)=="table") and m or nil
+end
+
+local function teamPetUuids()
+	local PGS = Runtime.PetGroupService
+	if not PGS then return {} end
+	local gid = select(2, pcall(PGS.getCurrentGroupId)) or 1
+	local ok, grp = pcall(PGS.getPetGroupByGroupId, gid)
+	local out = {}
+	if ok and typeof(grp)=="table" and typeof(grp.petUuids)=="table" then
+		for slot=1,5 do
+			local u = grp.petUuids[slot] or grp.petUuids[tostring(slot)]
+			if type(u)=="string" and u~="" then out[#out+1]=u end
+		end
+	end
+	return out
+end
+HubState.teamPetUuids = teamPetUuids
+
+-- dropdown options for "Pet to Release": name
+function Feature.petReleaseOptions()
+	local opts = {}
+	local map = getPetMap(); if not map then return opts end
+	for uuid, pet in pairs(map) do
+		local tags = {}
+		if petGrade(pet) then tags[#tags+1]=petGrade(pet) end
+		if petIsShiny(pet) then tags[#tags+1]="Shiny" end
+		if petIsPrismatic(pet) then tags[#tags+1]="Prism" end
+		if pet.locked then tags[#tags+1]="🔒" end
+		local suffix = (#tags>0) and (" ["..table.concat(tags,"/").."]") or ""
+		opts[#opts+1] = { label=(pet.name or "Pet")..suffix, value=uuid }
+	end
+	table.sort(opts, function(a,b) return a.label < b.label end)
+	return opts
+end
+
+-- release a single pet by uuid
+function Feature.releaseOne(uuid)
+	local PS = Runtime.PetService
+	if not (PS and PS.reqRemovePets) or not uuid then return nil end
+	local ok, code = pcall(PS.reqRemovePets, { uuid })
+	return ok and code or nil
+end
+
+-- Auto Lock pass
+local function autoLockPass()
+	local PS = Runtime.PetService
+	if not (PS and PS.reqSetPetLocked) then return end
+	local tg = HubState.toggles
+	if not (tg.autoLockShiny or tg.autoLockPrismatic or tg.autoLockSSS) then return end
+	local map = getPetMap(); if not map then return end
+	for uuid, pet in pairs(map) do
+		if HubState._killed then return end
+		if not pet.locked then
+			local want = (tg.autoLockShiny and petIsShiny(pet))
+				or (tg.autoLockPrismatic and petIsPrismatic(pet))
+				or (tg.autoLockSSS and petGrade(pet)=="SSS")
+			if want then pcall(PS.reqSetPetLocked, uuid, true); task.wait(0.1) end
+		end
+	end
+end
+
+-- Lock all pets matching the active lock rules; returns how many were newly locked.
+function Feature.lockMatchingNow()
+	local PS = Runtime.PetService
+	if not (PS and PS.reqSetPetLocked) then return 0 end
+	local tg = HubState.toggles
+	local map = getPetMap(); if not map then return 0 end
+	local n = 0
+	for uuid, pet in pairs(map) do
+		if HubState._killed then break end
+		if not pet.locked then
+			local want = (tg.autoLockShiny and petIsShiny(pet))
+				or (tg.autoLockPrismatic and petIsPrismatic(pet))
+				or (tg.autoLockSSS and petGrade(pet)=="SSS")
+			if want then
+				local ok,code = pcall(PS.reqSetPetLocked, uuid, true)
+				if ok and (code==20000 or code==nil) then n+=1 end
+				task.wait(0.1)
+			end
+		end
+	end
+	return n
+end
+
+-- One Auto-Release cycle: lock protected pets, re-read, release the rest one at a time.
+function Feature.autoReleasePass()
+	autoLockPass()
+	local map = getPetMap(); if not map then return 0 end
+	local tg = HubState.toggles
+	local released = 0
+	for uuid, pet in pairs(map) do
+		if HubState._killed or not HubState.toggles.autoRelease then break end
+		local shiny, prism, grade = petIsShiny(pet), petIsPrismatic(pet), petGrade(pet)
+		local keep = pet.locked or pet.loved
+			or (tg.keepShiny and shiny)
+			or (tg.keepPrismatic and prism)
+			or (grade and tg.keepGrades[grade])
+		local lockProtected = (tg.autoLockShiny and shiny) or (tg.autoLockPrismatic and prism) or (tg.autoLockSSS and grade=="SSS")
+		if not keep and not lockProtected then
+			local code = Feature.releaseOne(uuid)
+			if code==20000 then released += 1 end
+			task.wait(0.2)
+		end
+	end
+	return released
+end
+
+do
+	local running=false
+	function Feature.startReleaseLoop()
+		if running then return end
+		running=true
+		task.spawn(function()
+			while not HubState._killed do
+				if HubState.toggles.autoRelease then
+					local n = Feature.autoReleasePass()
+					if n>0 then HubState._notify("Auto Release: freed "..n, "ok") end
+				end
+				task.wait(8)
+			end
+			running=false
+		end)
+	end
+end
+
+-- 4c.5  QUESTS — GOAL-DRIVEN auto-do engine + integrated auto-claim
+local GOAL_TYPE = {
+	DAILY_LOGIN=1, USE_ITEM_ID=2, LEVEL_UP=3, DEFEAT_ENEMY=4, OBTAIN_PET=5,
+	OBTAIN_PET_SHINY=6, PET_TALENT_REACH=7, PET_LEVEL_REACH=8, OPEN_CHEST=9,
+	TALK_TO_NPC=10, ONLINE_TIME=11, PVP_WIN=12, TEAM_WIN=13, INDEX_UNLOCK=14,
+	OBTAIN_EQUIPMENT=15, SERVER_BOSS=16, TOWER_FLOOR=17, BATTLE_LOSE=18,
+	COMPLETE_DUNGEON=19, COMPLETE_BATTLE=20, PET_HATCH=21, COMPLETE_BATTLE_WIN=22,
+	OBTAIN_PET_SPARKLE=23, OBTAIN_PET_CATCH=24, INDEX_ELEMENT_NUMBER=25, TRADE_TIME=26,
+	TEAM_BATTLE=27, EQUIPMENT_ENHANCE=28, EQUIPMENT_TRAIT=29, DUNGEON_CLEAR_PERFECT=30,
+	PVP_WIN_LINEUPS=31, PVP_WINSTREAK=32, PVP_TOP_ONCE=33, PET_FEED=34, ITEM_OBTAIN=35,
+	PROFESSION_LOTTERY=36, PROFESSION_OBTAIN=37, CLEAR_TAG_DUNGEON=38,
+	COMPLETE_TYPE_BATTLE_WIN=39, PET_OWNED=40, ISLAND_REACH=41, PLAYER_TIER=42,
+	WORLD_BOSS_REWARD_CLAIM=43, EQUIPMENT_OWNED=44, PET_TRAIT_OWNED=45,
+	EQUIPMENT_REFINE=46, EQUIPMENT_OWNED_TRAIT=47,
+}
+
+-- read a Goal config row
+local function getGoalCfg(goalId)
+	if not (Runtime.ConfigDataManager and Runtime.ConfigConst) then return nil end
+	local o,c = pcall(Runtime.ConfigDataManager.getConfig, Runtime.ConfigConst.ConfigName.GOAL, goalId)
+	return o and c or nil
+end
+-- read a Task config row 
+local function getTaskCfg(taskId)
+	if not (Runtime.ConfigDataManager and Runtime.ConfigConst) then return nil end
+	local o,c = pcall(Runtime.ConfigDataManager.getConfig, Runtime.ConfigConst.ConfigName.TASK, taskId)
+	return o and c or nil
+end
+
+-- flatten a task's goals
+local function taskGoalList(taskId)
+	local tc = getTaskCfg(taskId)
+	local out = {}
+	if tc and typeof(tc.goals)=="table" then
+		for _,grp in ipairs(tc.goals) do
+			if typeof(grp)=="table" then
+				for _,gid in ipairs(grp) do
+					local gc = getGoalCfg(gid)
+					if gc then out[#out+1] = { id=gid, cfg=gc } end
+				end
+			end
+		end
+	end
+	return out
+end
+
+-- resolve a battleId (from a WIN_BATTLE goal's params)
+local function npcByBattleId(battleId)
+	if not battleId then return nil end
+	for _,n in ipairs(challengeableNpcs()) do
+		if n.battleId == battleId then return n end
+	end
+	return nil
+end
+
+local function claimTaskId(taskId)
+	local bind = Runtime.ReqCompleteTask
+	if bind and bind.Invoke then
+		local o, code = pcall(function() return bind:Invoke(taskId) end)
+		if o then return code==20000 or code==nil, code end
+	end
+	local rem = Runtime.ReqCompleteTaskRemote
+	if rem and rem.InvokeServer then
+		local o, code = pcall(function() return rem:InvokeServer(taskId) end)
+		if o then return code==20000 or code==nil, code end
+	end
+	return false
+end
+
+local function claimCompletedTasks()
+	local T = Runtime.TaskService
+	if not (T and T.buildAllTaskRuntimeEntryData and Runtime.ReqCompleteTask) then return 0 end
+	local ok, sc, entryMap = pcall(T.buildAllTaskRuntimeEntryData)
+	-- returns (errCode, entryMap, depSnapshot): the map is the SECOND return value
+	local map = (typeof(sc)=="table") and sc or (typeof(entryMap)=="table") and entryMap or nil
+	if not map then return 0 end
+	local claimed=0
+	for taskId, e in pairs(map) do
+		if HubState._killed then break end
+		local claimable = (typeof(e)=="table") and (
+			(typeof(e.derivedData)=="table" and e.derivedData.isClaimable) or e.isClaimable
+		) or false
+		if claimable then
+			if claimTaskId(taskId) then claimed+=1 end
+			task.wait(0.25)
+		end
+	end
+	return claimed
+end
+
+local function claimActiveMilestone()
+	local T = Runtime.TaskService
+	if not (T and Runtime.ReqClaimActiveReward and T.getActivePoint and T.getActiveClaimIndex) then return false end
+	-- claimable iff activePoint >= threshold of next unclaimed tier
+	local okp, ap = pcall(T.getActivePoint)
+	local oki, ci = pcall(T.getActiveClaimIndex)
+	if not (okp and oki) then return false end
+	-- read tier thresholds from ActiveRewardsConfig
+	local claimable=false
+	if Runtime.ConfigDataManager and Runtime.ConfigConst then
+		local o,tbl = pcall(Runtime.ConfigDataManager.getTable, Runtime.ConfigConst.ConfigName.ACTIVE_REWARDS)
+		if o and typeof(tbl)=="table" then
+			-- next tier index = ci+1 ; find its activePoint threshold
+			for _,tier in pairs(tbl) do
+				if typeof(tier)=="table" and tier.id==(ci+1) and typeof(tier.activePoint)=="number" then
+					claimable = (ap >= tier.activePoint); break
+				end
+			end
+		end
+	end
+	if not claimable then return false end
+	local bind = Runtime.ReqClaimActiveReward
+	if bind and bind.Invoke then
+		local o = pcall(function() return bind:Invoke() end)
+		if o then return true end
+	end
+	local rem = Runtime.ReqClaimActiveRewardRemote
+	if rem and rem.InvokeServer then
+		local o = pcall(function() return rem:InvokeServer() end)
+		return o and true or false
+	end
+	return false
+end
+
+local function questWorkList()
+	local T = Runtime.TaskService
+	if not (T and T.getTaskModuleData) then return {} end
+	local ok, data = pcall(T.getTaskModuleData)
+	if not ok or typeof(data)~="table" or typeof(data.taskList)~="table" then return {} end
+	local plr = Players.LocalPlayer
+	local list = {}
+	for taskId, td in pairs(data.taskList) do
+		if typeof(td)=="table" and td.status==2 then -- IN_PROGRESS
+			-- skip ones already ready to claim (goals done) — claim loop takes them
+			local allDone = false
+			local o,_,done = pcall(T.checkAllGoalsCompletedByTaskId, plr, taskId)
+			if o then allDone = done end
+			if not allDone then
+				local tc = getTaskCfg(taskId)
+				list[#list+1] = {
+					taskId = taskId,
+					taskType = tc and tc.type or 99,
+					title = (tc and tc.taskTitle) or ("Task "..tostring(taskId)),
+					goals = taskGoalList(taskId),
+				}
+			end
+		end
+	end
+	table.sort(list, function(a,b)
+		if a.taskType ~= b.taskType then return a.taskType < b.taskType end -- MAIN(1) first
+		return a.taskId < b.taskId
+	end)
+	return list
+end
+
+local GOAL_TYPE_NAME = {}
+for name,val in pairs(GOAL_TYPE) do GOAL_TYPE_NAME[val] = name end
+
+local MANUAL_GOAL_TYPES = {
+	[GOAL_TYPE.PVP_WIN]=true, [GOAL_TYPE.PVP_WIN_LINEUPS]=true, [GOAL_TYPE.PVP_WINSTREAK]=true,
+	[GOAL_TYPE.PVP_TOP_ONCE]=true, [GOAL_TYPE.TEAM_BATTLE]=true, [GOAL_TYPE.TEAM_WIN]=true,
+	[GOAL_TYPE.TRADE_TIME]=true,
+	[GOAL_TYPE.OBTAIN_EQUIPMENT]=true, [GOAL_TYPE.EQUIPMENT_OWNED]=true, [GOAL_TYPE.EQUIPMENT_TRAIT]=true,
+	[GOAL_TYPE.EQUIPMENT_ENHANCE]=true, [GOAL_TYPE.EQUIPMENT_REFINE]=true, [GOAL_TYPE.EQUIPMENT_OWNED_TRAIT]=true,
+	[GOAL_TYPE.PROFESSION_OBTAIN]=true, [GOAL_TYPE.PROFESSION_LOTTERY]=true,
+	[GOAL_TYPE.PET_TRAIT_OWNED]=true, [GOAL_TYPE.DUNGEON_CLEAR_PERFECT]=true,
+}
+
+local function planQuestAction(q)
+	local firstManual = nil
+	for _,g in ipairs(q.goals) do
+		local ty = g.cfg.type
+		local params = g.cfg.params
+		if ty==GOAL_TYPE.COMPLETE_BATTLE_WIN or ty==GOAL_TYPE.COMPLETE_BATTLE then
+			local bid = params and params[1]
+			local npc = npcByBattleId(bid)
+			if npc then return {kind="challenge", npc=npc, goalId=g.id} end
+		elseif ty==GOAL_TYPE.COMPLETE_TYPE_BATTLE_WIN then
+			local p = params and params[1]
+			if p==4 then return {kind="anyNpc"} else return {kind="anyBoss"} end
+		elseif ty==GOAL_TYPE.OBTAIN_PET_SHINY then
+			return {kind="shiny"}
+		elseif ty==GOAL_TYPE.OBTAIN_PET_SPARKLE then
+			return {kind="prismatic"}
+		elseif ty==GOAL_TYPE.DEFEAT_ENEMY or ty==GOAL_TYPE.OBTAIN_PET
+			or ty==GOAL_TYPE.OBTAIN_PET_CATCH then
+			local fam = params and params[1]
+			return {kind="farm", family=fam}
+		elseif ty==GOAL_TYPE.PET_OWNED then
+			return {kind="own", level=(params and params[1]) or 1, count=g.cfg.target or 1, goalId=g.id}
+		elseif ty==GOAL_TYPE.PET_LEVEL_REACH then
+			return {kind="own", level=(params and params[1]) or 1, count=1, goalId=g.id}
+		elseif ty==GOAL_TYPE.ITEM_OBTAIN then
+			return {kind="buyitem", itemId=params and params[1], count=g.cfg.target or 1, goalId=g.id}
+		elseif ty==GOAL_TYPE.OPEN_CHEST then
+			return {kind="chest"}
+		elseif ty==GOAL_TYPE.TOWER_FLOOR then
+			return {kind="tower", floor=g.cfg.target}
+		elseif ty==GOAL_TYPE.ISLAND_REACH then
+			return {kind="island", islandId=params and params[1], goalId=g.id}
+		elseif ty==GOAL_TYPE.TALK_TO_NPC then
+			return {kind="talk", npcId=params and params[1], goalId=g.id}
+		elseif ty==GOAL_TYPE.PET_FEED then
+			return {kind="feed"}
+		elseif ty==GOAL_TYPE.COMPLETE_DUNGEON or ty==GOAL_TYPE.CLEAR_TAG_DUNGEON then
+			local did = params and params[1]
+			return {kind="dungeon", dungeonId=did, goalId=g.id}
+		elseif ty==GOAL_TYPE.PLAYER_TIER then
+			return {kind="ascend", tier=params and params[1], goalId=g.id}
+		elseif MANUAL_GOAL_TYPES[ty] and not firstManual then
+			firstManual = GOAL_TYPE_NAME[ty] or ("type "..tostring(ty))
+		end
+	end
+	if firstManual then return {kind="manual", reason=firstManual} end
+	return nil
+end
+
+HubState.questWorkList = questWorkList
+HubState.planQuestAction = planQuestAction
+
+local function driveQuestAction(plan, q)
+	if plan.kind=="challenge" then
+		if HubState.activityLock and HubState.activityLock~="quest" then return "busy" end
+		if not claimLock("quest") then return "busy" end
+		if Runtime.getCurrentBattle()~=nil then releaseLock("quest"); return "in-battle" end
+		HubState._notify("Quest: "..q.title, "ok")
+		local fought = challengeNpc(plan.npc)
+		releaseLock("quest")
+		return fought and "fought" or "challenge-failed"
+
+	elseif plan.kind=="anyNpc" or plan.kind=="anyBoss" then
+		-- pick any challengeable target of the right kind and fight
+		if HubState.activityLock and HubState.activityLock~="quest" then return "busy" end
+		if not claimLock("quest") then return "busy" end
+		if Runtime.getCurrentBattle()~=nil then releaseLock("quest"); return "in-battle" end
+		local target
+		for _,n in ipairs(challengeableNpcs()) do
+			if plan.kind=="anyBoss" and n.isBoss then target=n; break end
+			if plan.kind=="anyNpc" and not n.isBoss then target=n; break end
+		end
+		if not target then releaseLock("quest"); return "no-target" end
+		HubState._notify("Quest: "..q.title, "ok")
+		local fought = challengeNpc(target)
+		releaseLock("quest")
+		return fought and "fought" or "challenge-failed"
+
+	elseif plan.kind=="farm" then
+		-- target the goal's pet family if given, then run the farm loop
+		if plan.family then HubState.toggles.farmTargetConfigId = plan.family end
+		if not HubState.toggles.farmEnabled then
+			HubState.toggles.autoCatch = true
+			HubState.toggles.farmEnabled = true
+			if HubState._configControls and HubState._configControls.farmEnabled then
+				pcall(function() HubState._configControls.farmEnabled.handle:SetSilent(true) end)
+			end
+			HubState.Engage.farm.start()
+		end
+		return "farming"
+
+	elseif plan.kind=="shiny" or plan.kind=="prismatic" then
+		local key = (plan.kind=="shiny") and "autoCatchShiny" or "autoCatchPrismatic"
+		HubState.toggles[key] = true
+		if not HubState.toggles.farmEnabled then
+			HubState.toggles.farmEnabled = true
+			if HubState._configControls and HubState._configControls.farmEnabled then
+				pcall(function() HubState._configControls.farmEnabled.handle:SetSilent(true) end)
+			end
+			HubState.Engage.farm.start()
+		end
+		return plan.kind.."-hunt"
+
+	elseif plan.kind=="chest" then
+		pcall(Feature.claimAllChests)
+		return "chests"
+
+	elseif plan.kind=="tower" then
+		if not HubState.toggles.towerEnabled then
+			HubState.toggles.towerEnabled = true
+			if HubState._configControls and HubState._configControls.towerEnabled then
+				pcall(function() HubState._configControls.towerEnabled.handle:SetSilent(true) end)
+			end
+			Feature.startTowerLoop()
+		end
+		return "tower"
+
+	elseif plan.kind=="island" then
+		-- travel to a specific island
+		if HubState.activityLock and HubState.activityLock~="quest" then return "busy" end
+		if not claimLock("quest") then return "busy" end
+		if Runtime.getCurrentBattle()~=nil then releaseLock("quest"); return "in-battle" end
+		HubState._notify("Quest: "..q.title, "ok")
+		local ok = HubState.gotoIsland(plan.islandId)
+		releaseLock("quest")
+		return ok and "traveled" or "island-unknown"
+
+	elseif plan.kind=="talk" then
+		if HubState.activityLock and HubState.activityLock~="quest" then return "busy" end
+		if not claimLock("quest") then return "busy" end
+		if Runtime.getCurrentBattle()~=nil then releaseLock("quest"); return "in-battle" end
+		HubState._notify("Quest: "..q.title, "ok")
+		local ok = HubState.talkToNpc(plan.npcId, q.taskId)
+		releaseLock("quest")
+		return ok and "talked" or "talk-failed"
+
+	elseif plan.kind=="feed" then
+		local ok = pcall(function() return Feature.feedOnePet and Feature.feedOnePet() end)
+		return ok and "fed" or "feed-unavailable"
+
+	elseif plan.kind=="ascend" then
+		local ok, code = pcall(function() return Feature.doAscend and Feature.doAscend() end)
+		if ok and code==true then HubState._notify("Quest: ascended — "..q.title, "ok"); return "ascended" end
+		return "ascend-not-ready"
+
+	elseif plan.kind=="own" then
+		local PS = Runtime.PetStorage
+		local function lvlOf(u) local p = PS and PS.getPetList and PS.getPetList()[u]; return p and tonumber(p.level) or 0 end
+
+		local team = teamPetUuids()
+		local target = team[1]
+		if not target then
+			pcall(function() Feature.ownLevelPets(plan.level, plan.count) end)
+			team = teamPetUuids(); target = team[1]
+		end
+
+		local function qualifyCount()
+			local map = getPetMap and getPetMap(); local n=0
+			if map then for _,pet in pairs(map) do if (tonumber(pet.level) or 0) >= plan.level then n+=1 end end end
+			return n
+		end
+		if qualifyCount() >= plan.count then
+			HubState.toggles._ownFeedLoop = nil; HubState._ownFeedTargetUuid = nil
+			return "leveled"
+		end
+		if target then
+			local counts = HubState.bagFruitCounts and HubState.bagFruitCounts() or {}
+			local smallMed = (counts[4000021] or 0) + (counts[4000022] or 0)
+			if smallMed > 300 and lvlOf(target) < plan.level then
+				pcall(function() Feature.feedFruitList(target) end)   -- Small+Medium only
+			end
+		end
+		if qualifyCount() >= plan.count then
+			HubState.toggles._ownFeedLoop = nil; HubState._ownFeedTargetUuid = nil
+			return "leveled"
+		end
+
+		if not HubState.toggles.autoCatch then
+			HubState.toggles.autoCatch = true
+			if HubState._configControls and HubState._configControls.autoCatch then
+				pcall(function() HubState._configControls.autoCatch.handle:SetSilent(true) end)
+			end
+		end
+		HubState._ownFeedTargetUuid = target
+		HubState.toggles._ownFeedLoop = true 
+		if not HubState.toggles.farmEnabled then
+			HubState.toggles.farmEnabled = true
+			if HubState._configControls and HubState._configControls.farmEnabled then
+				pcall(function() HubState._configControls.farmEnabled.handle:SetSilent(true) end)
+			end
+			HubState.Engage.farm.start()
+		end
+		local cur = target and lvlOf(target) or 0
+		HubState._notify("Quest: leveling slot-1 pet to Lv."..plan.level.." (now Lv."..cur..")", "ok")
+		return "leveling"
+
+	elseif plan.kind=="buyitem" then
+		local ok = false
+		pcall(function() ok = Feature.buyItem(plan.itemId, plan.count) end)
+		return ok and "bought" or "buy-failed"
+
+	elseif plan.kind=="dungeon" then
+		-- enter the dungeon
+		if HubState.activityLock and HubState.activityLock~="quest" then return "busy" end
+		if not claimLock("quest") then return "busy" end
+		if Runtime.getCurrentBattle()~=nil then releaseLock("quest"); return "in-battle" end
+		HubState._notify("Quest: "..q.title, "ok")
+		local ok = pcall(function() return Feature.enterDungeon and Feature.enterDungeon(plan.dungeonId) end)
+		-- wait for the fight to resolve
+		local tb=os.clock()
+		while Runtime.getCurrentBattle()~=nil and os.clock()-tb<180 and not HubState._killed do task.wait(0.5) end
+		releaseLock("quest")
+		return ok and "dungeon" or "dungeon-failed"
+
+	elseif plan.kind=="manual" then
+		-- cannot be automated — the loop shows the warning banner; nothing to do here.
+		return "manual"
+	end
+	return "no-plan"
+end
+
+function Feature.feedOnePet()
+	if not Runtime.feedPet then return false end
+	local map = getPetMap and getPetMap()
+	if not map then return false end
+	local SMALL = (Runtime.EXP_FRUIT and Runtime.EXP_FRUIT.SMALL) or 4000021
+
+	-- 1) a team pet under level 30
+	local team = teamPetUuids()
+	local underLeveled, allTeamMaxed = nil, true
+	for _,uid in ipairs(team) do
+		local pet = map[uid]
+		local lvl = pet and tonumber(pet.level) or 0
+		if lvl < 30 then underLeveled = underLeveled or uid; allTeamMaxed = false end
+	end
+	if underLeveled then
+		return Runtime.feedPet(underLeveled, SMALL, 1) and true or false
+	end
+
+	-- 2) all team pets >= 30 (or team empty) -> feed any inventory pet 1 Small EXP Fruit.
+	--    prefer a non-locked/non-loved junk pet so we don't touch a prized one.
+	local target
+	for uuid,pet in pairs(map) do
+		if not pet.locked and not pet.loved then target = uuid; break end
+	end
+	target = target or next(map)  -- fallback: literally any pet
+	if not target then return false end
+	return Runtime.feedPet(target, SMALL, 1) and true or false
+end
+
+-- EXP fruit itemIds and their per-fruit EXP value (largest first for efficient feeding).
+local EXP_FRUITS = {
+	{ id=4000039, exp=100000 },  -- Superior
+	{ id=4000023, exp=10000  },  -- Large
+	{ id=4000022, exp=1000   },  -- Medium
+	{ id=4000021, exp=100    },  -- Small
+}
+-- fruit set for quest leveling: Small + Medium only (Large/Superior are spared)
+local FEED_FRUITS = {
+	{ id=4000022, exp=1000 },  -- Medium
+	{ id=4000021, exp=100  },  -- Small
+}
+-- fruit counts in the bag via the game's own accessor. the old itemList walk missed fruit on
+-- this build (itemList only holds currency/tickets), so it always read 0. returns { [id]=count }.
+local function bagFruitCounts()
+	local counts = {}
+	local ids = { 4000021, 4000022, 4000023, 4000039 }
+	local Bag = Runtime.BagService
+	if Bag and Bag.getItemNumById then
+		for _,id in ipairs(ids) do
+			local ok, n = pcall(Bag.getItemNumById, id)
+			counts[id] = (ok and type(n)=="number") and n or 0
+		end
+		return counts
+	end
+	-- fallback (old behavior) if BagService is missing
+	local BagStorage = safeRequire(RS.Storage.BagStorage)
+	local bd = BagStorage and BagStorage.getBagData and select(2, pcall(function() return BagStorage:getBagData() end))
+	if type(bd)=="table" and type(bd.itemList)=="table" then
+		for _,it in pairs(bd.itemList) do
+			local id = it.id or it.itemId
+			if id then counts[id] = (counts[id] or 0) + (it.num or it.count or 0) end
+		end
+	end
+	return counts
+end
+HubState.bagFruitCounts = bagFruitCounts
+
+-- feed the given fruit list into one pet (list order = feed order). only feeds what's in the
+-- bag (server rejects over-stock with 23003). returns the pet's level after feeding.
+local function feedFruitList(uid, list)
+	local PS = Runtime.PetStorage
+	local function lvlOf(u) local p = PS and PS.getPetList and PS.getPetList()[u]; return p and tonumber(p.level) or 0 end
+	local have = bagFruitCounts()
+	for _,f in ipairs(list or EXP_FRUITS) do
+		local n = have[f.id] or 0
+		if n > 0 then Runtime.feedPet(uid, f.id, n); task.wait(0.4) end
+	end
+	return lvlOf(uid)
+end
+-- feed every fruit type (non-quest callers); quest leveling uses FEED_FRUITS instead
+local function feedAllBagFruit(uid)
+	return feedFruitList(uid, EXP_FRUITS)
+end
+-- exposed for the farm loop's 1-by-1 feed; defaults to Small+Medium only
+function Feature.feedFruitList(uid, list)
+	return feedFruitList(uid, list or FEED_FRUITS)
+end
+
+-- Set of pet uuids currently in the active team (they CANNOT be released — reqRemovePets
+-- returns 38303 PET_IN_GROUP for them).
+local function teamUuidSet()
+	local set = {}
+	local PGS = Runtime.PetGroupService
+	if PGS and PGS.getCurrentGroupId and PGS.getPetGroupByGroupId then
+		local gid = select(2, pcall(PGS.getCurrentGroupId))
+		local grp = select(2, pcall(PGS.getPetGroupByGroupId, gid))
+		if type(grp)=="table" and type(grp.petUuids)=="table" then
+			for _,u in pairs(grp.petUuids) do set[u]=true end
+		end
+	end
+	return set
+end
+
+-- Release every non-kept junk pet EXCEPT `protectUid` and team pets, converting them to EXP
+-- fruit in the bag. Respects the same keep rules as autoReleasePass. NOTE: low-level junk
+-- yields almost NO fruit (fruit scales with the released pet's total EXP × PET_RELEASE_EXP_RATIO
+-- = 70%), so this is a minor top-up; the main leveling driver is battle EXP (team + farm).
+-- Returns how many were released.
+function Feature.releaseJunkForFruit(protectUid)
+	local PS = Runtime.PetService
+	if not (PS and PS.reqRemovePets) then return 0 end
+	local map = getPetMap(); if not map then return 0 end
+	local tg = HubState.toggles
+	local inTeam = teamUuidSet()
+	local released = 0
+	for uuid, pet in pairs(map) do
+		if HubState._killed then break end
+		if uuid ~= protectUid and not inTeam[uuid] then
+			local shiny, prism, grade = petIsShiny(pet), petIsPrismatic(pet), petGrade(pet)
+			local keep = pet.locked or pet.loved
+				or (tg.keepShiny and shiny) or (tg.keepPrismatic and prism)
+				or (grade and tg.keepGrades and tg.keepGrades[grade])
+			local lockProtected = (tg.autoLockShiny and shiny) or (tg.autoLockPrismatic and prism) or (tg.autoLockSSS and grade=="SSS")
+			if not keep and not lockProtected then
+				local ok,code = pcall(PS.reqRemovePets, { uuid })
+				if ok and code==20000 then released += 1 end
+				task.wait(0.15)
+			end
+		end
+	end
+	return released
+end
+
+-- level a pet toward targetLv: feed Small+Medium on hand, then release junk -> fruit -> feed.
+-- returns the level reached (may be short if no fruit + no junk; the quest loop retries).
+function Feature.levelPetTo(uid, targetLv)
+	if not (Runtime.feedPet and uid and targetLv) then return 0 end
+	local PS = Runtime.PetStorage
+	local function lvlOf(u) local p = PS and PS.getPetList and PS.getPetList()[u]; return p and tonumber(p.level) or 0 end
+	if lvlOf(uid) >= targetLv then return lvlOf(uid) end
+	-- round 1: feed the Small+Medium fruit we already have
+	if feedFruitList(uid, FEED_FRUITS) >= targetLv then return lvlOf(uid) end
+	-- rounds 2-3: release junk -> fruit -> feed
+	for round=1,2 do
+		if HubState._killed or lvlOf(uid) >= targetLv then break end
+		local freed = Feature.releaseJunkForFruit(uid)
+		if freed > 0 then
+			task.wait(0.5)   -- let the release rewards land in the bag
+			if feedFruitList(uid, FEED_FRUITS) >= targetLv then break end
+		else
+			break   -- nothing left to release; give up this pass
+		end
+	end
+	return lvlOf(uid)
+end
+
+-- Put `uid` into the current pet team (slot 1) so it gains battle EXP while farming, without
+-- disturbing the rest of the team. Uses reqSetPetGroup(groupId, petUuids). Idempotent.
+function Feature.ensurePetInTeam(uid)
+	local PGS = Runtime.PetGroupService
+	if not (PGS and PGS.getCurrentGroupId and PGS.reqSetPetGroup) then return false end
+	local gid = select(2, pcall(PGS.getCurrentGroupId))
+	local grp = select(2, pcall(PGS.getPetGroupByGroupId, gid))
+	if type(grp)~="table" or type(grp.petUuids)~="table" then return false end
+	-- already in team?
+	for _,u in pairs(grp.petUuids) do if u==uid then return true end end
+	-- put it in slot 1 (bump others down); keep it simple: replace slot 1
+	local newUuids = {}
+	for slot,u in pairs(grp.petUuids) do newUuids[slot]=u end
+	newUuids[1] = uid
+	local ok = pcall(PGS.reqSetPetGroup, gid, newUuids)
+	return ok
+end
+
+-- Satisfy a PET_OWNED / PET_LEVEL_REACH goal: ensure `count` pets are at >= `level`.
+-- Prefer pets ALREADY closest to the target (least waste); never touch locked/loved unless
+-- we must. Levels them one at a time via Feature.levelPetTo. Returns how many now qualify.
+function Feature.ownLevelPets(level, count)
+	local map = getPetMap and getPetMap()
+	if not map then return 0 end
+	count = count or 1
+	-- already-qualifying
+	local qualify, candidates = {}, {}
+	for uid,pet in pairs(map) do
+		local lv = tonumber(pet.level) or 0
+		if lv >= level then qualify[#qualify+1]=uid
+		else candidates[#candidates+1]={uid=uid, lv=lv, locked=pet.locked or pet.loved} end
+	end
+	if #qualify >= count then return #qualify end
+	-- sort candidates: highest level first (closest to target), unlocked before locked
+	table.sort(candidates, function(a,b)
+		if a.locked ~= b.locked then return not a.locked end
+		return a.lv > b.lv
+	end)
+	local need = count - #qualify
+	for i=1,math.min(need, #candidates) do
+		if HubState._killed then break end
+		pcall(function() Feature.ensurePetInTeam(candidates[i].uid) end)
+		local lv = Feature.levelPetTo(candidates[i].uid, level)   -- feeds bag fruit if any
+		if lv >= level then qualify[#qualify+1]=candidates[i].uid end
+	end
+	return #qualify
+end
+
+-- Buy an item from a shop (ITEM_OBTAIN goals, e.g. "Buy an Advanced Ball"). Tries the
+-- ShopService purchase path. itemId is the ITEM id; shops key goods by a goodsId, so we
+-- resolve the goods entry whose itemId matches, then applyPurchaseGoods.
+function Feature.buyItem(itemId, count)
+	local Shop = Runtime.ShopService
+	if not (Shop and itemId) then return false end
+	count = count or 1
+	-- best-effort: many builds accept applyPurchaseGoods(goodsId, num). We look up a goods row
+	-- whose reward/item matches itemId via GoodsConfig.
+	local CDM, CCn = Runtime.ConfigDataManager, Runtime.ConfigConst
+	local goodsId
+	if CDM and CCn and CCn.ConfigName.GOODS then
+		local ok, goodsTbl = pcall(CDM.getTable, CCn.ConfigName.GOODS)
+		if ok and type(goodsTbl)=="table" then
+			for gid,row in pairs(goodsTbl) do
+				if type(row)=="table" then
+					local rid = row.itemId or row.goodsItemId or (type(row.reward)=="table" and row.reward.itemId)
+					if rid==itemId then goodsId=gid; break end
+				end
+			end
+		end
+	end
+	if not goodsId then return false end
+	if Shop.applyPurchaseGoods then
+		local ok = pcall(Shop.applyPurchaseGoods, goodsId, count)
+		return ok
+	end
+	return false
+end
+
+function Feature.doAscend()
+	local LV = Runtime.LvService
+	if not (LV and LV.reqLevelBreakthrough) then return false end
+	local ok, code = pcall(LV.reqLevelBreakthrough)
+	return ok and (code==20000 or code==true)
+end
+
+function Feature.enterDungeon(dungeonId)
+	if not Runtime.enterDungeon then return false end
+	local id = dungeonId
+	if typeof(id)=="table" then id = id[1] end
+	if typeof(id)~="number" then return false end
+	local ok = pcall(Runtime.enterDungeon, id)
+	return ok and true or false
+end
+
+--Cannot do this quets GUI , happens when a auto quest system  cannot do it (son)
+do
+	local gui, frame, titleLbl, subLbl, stroke2, hueConn
+	local shown = false
+
+	local function build()
+		if gui then return end
+		gui = Instance.new("ScreenGui")
+		gui.Name = "JinHubQuestWarning"
+		gui.ResetOnSpawn = false
+		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		gui.IgnoreGuiInset = true
+		gui.DisplayOrder = 1000
+		gui.Enabled = false
+		gui.Parent = playerGui
+		HubState._warnGui = gui
+
+		frame = Instance.new("Frame")
+		frame.AnchorPoint = Vector2.new(0.5, 0)
+		frame.Position = UDim2.new(0.5, 0, 0, 40)
+		frame.Size = UDim2.new(0, 560, 0, 130)
+		frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+		frame.BorderSizePixel = 0
+		frame.Parent = gui
+		local cn = Instance.new("UICorner"); cn.CornerRadius = UDim.new(0,10); cn.Parent = frame
+		stroke2 = Instance.new("UIStroke")
+		stroke2.Thickness = 4
+		stroke2.Color = Color3.fromRGB(255,0,0)
+		stroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke2.Parent = frame
+
+		local pad = Instance.new("UIPadding")
+		pad.PaddingLeft=UDim.new(0,18); pad.PaddingRight=UDim.new(0,18)
+		pad.PaddingTop=UDim.new(0,14); pad.PaddingBottom=UDim.new(0,14); pad.Parent=frame
+
+		titleLbl = Instance.new("TextLabel")
+		titleLbl.Size = UDim2.new(1,0,0,58)
+		titleLbl.BackgroundTransparency = 1
+		titleLbl.Font = Enum.Font.GothamBlack
+		titleLbl.TextSize = 26
+		titleLbl.TextWrapped = true
+		titleLbl.Text = "CAUTION: do this quest yourself"
+		titleLbl.TextColor3 = Color3.fromRGB(255,255,255)
+		titleLbl.TextStrokeColor3 = Color3.fromRGB(230,145,70)
+		titleLbl.TextStrokeTransparency = 0
+		titleLbl.Parent = frame
+
+		subLbl = Instance.new("TextLabel")
+		subLbl.Position = UDim2.new(0,0,0,62)
+		subLbl.Size = UDim2.new(1,0,0,44)
+		subLbl.BackgroundTransparency = 1
+		subLbl.Font = Enum.Font.GothamBold
+		subLbl.TextSize = 16
+		subLbl.TextWrapped = true
+		subLbl.Text = "Auto Quest system cannot do this"
+		subLbl.TextColor3 = Color3.fromRGB(255,255,255)
+		subLbl.TextStrokeColor3 = Color3.fromRGB(230,145,70)
+		subLbl.TextStrokeTransparency = 0.2
+		subLbl.Parent = frame
+	end
+
+	function Feature.showQuestWarning(questTitle)
+		build()
+		if subLbl then
+			subLbl.Text = (questTitle and (questTitle.."\n") or "").."Auto Quest system cannot do this"
+		end
+		if shown then return end
+		shown = true
+		gui.Enabled = true
+		--RGB
+		if not hueConn then
+			hueConn = RunService.RenderStepped:Connect(function()
+				if HubState._killed then return end
+				local t = (tick() * 0.35) % 1
+				if stroke2 then stroke2.Color = Color3.fromHSV(t, 1, 1) end
+			end)
+			table.insert(HubState._conns, hueConn)
+		end
+	end
+
+	function Feature.hideQuestWarning()
+		if not shown then return end
+		shown = false
+		if gui then gui.Enabled = false end
+	end
+end
+
+-- Auto-do quest tracks state so we don't thrash toggles: when the driver switches a
+-- quest away from a farm/hunt/tower action, it clears the flags it set so the next
+-- quest's action starts clean. We only auto-manage flags that Auto Quest itself enabled.
+local questDrive = { farmByQuest=false, shinyByQuest=false, prismByQuest=false, towerByQuest=false,
+	skillByQuest=false, switchByQuest=false, lastTaskId=nil }
+
+-- Auto Do Quest must be able to WIN the battles
+local function ensureQuestCombat()
+	local tg = HubState.toggles
+	if not tg.autoSkill then
+		tg.autoSkill = true; questDrive.skillByQuest = true
+		if HubState._configControls and HubState._configControls.autoSkill then
+			pcall(function() HubState._configControls.autoSkill.handle:SetSilent(true) end) end
+	end
+	if not tg.autoSwitchDeadPet then
+		tg.autoSwitchDeadPet = true; questDrive.switchByQuest = true
+		if HubState._configControls and HubState._configControls.autoSwitchDeadPet then
+			pcall(function() HubState._configControls.autoSwitchDeadPet.handle:SetSilent(true) end) end
+	end
+end
+
+local function clearQuestDrivenFlags()
+	if questDrive.farmByQuest then HubState.toggles.farmEnabled=false; questDrive.farmByQuest=false
+		if HubState._configControls and HubState._configControls.farmEnabled then
+			pcall(function() HubState._configControls.farmEnabled.handle:SetSilent(false) end) end
+	end
+	if questDrive.shinyByQuest then HubState.toggles.autoCatchShiny=false; questDrive.shinyByQuest=false end
+	if questDrive.prismByQuest then HubState.toggles.autoCatchPrismatic=false; questDrive.prismByQuest=false end
+	if questDrive.towerByQuest then HubState.toggles.towerEnabled=false; questDrive.towerByQuest=false
+		if HubState._configControls and HubState._configControls.towerEnabled then
+			pcall(function() HubState._configControls.towerEnabled.handle:SetSilent(false) end) end
+	end
+	if questDrive.skillByQuest then HubState.toggles.autoSkill=false; questDrive.skillByQuest=false
+		if HubState._configControls and HubState._configControls.autoSkill then
+			pcall(function() HubState._configControls.autoSkill.handle:SetSilent(false) end) end
+	end
+	if questDrive.switchByQuest then HubState.toggles.autoSwitchDeadPet=false; questDrive.switchByQuest=false
+		if HubState._configControls and HubState._configControls.autoSwitchDeadPet then
+			pcall(function() HubState._configControls.autoSwitchDeadPet.handle:SetSilent(false) end) end
+	end
+	-- clear own-leveling flags + learned family stats
+	HubState.toggles._ownFeedLoop = nil
+	HubState._ownFeedTargetUuid = nil
+	if HubState.OpponentPicker then pcall(HubState.OpponentPicker.reset) end
+end
+
+do
+	local running=false
+	function Feature.startQuestLoop()
+		if running then return end
+		running=true
+		task.spawn(function()
+			while not HubState._killed do
+				local tg = HubState.toggles
+				if tg.autoClaimQuests or tg.autoDoQuest then
+					local n = claimCompletedTasks()
+					pcall(claimActiveMilestone)
+					if n and n>0 then HubState._notify("Quests: claimed "..n, "ok") end
+				end
+				if tg.autoDoQuest then
+					local work = questWorkList()
+					local chosen, chosenPlan, firstManual
+					for _,q in ipairs(work) do
+						local plan = planQuestAction(q)
+						if plan then
+							if plan.kind=="manual" then
+								if not firstManual then firstManual = { q=q, plan=plan } end
+							else
+								chosen=q; chosenPlan=plan; break
+							end
+						end
+					end
+					if chosen then
+						-- an actionable quest exists -> hide any warning banner
+						pcall(Feature.hideQuestWarning)
+						if questDrive.lastTaskId ~= chosen.taskId then
+							clearQuestDrivenFlags()
+							questDrive.lastTaskId = chosen.taskId
+						end
+						-- record which flags this action turns on
+						if chosenPlan.kind=="farm" then questDrive.farmByQuest = not tg.farmEnabled or questDrive.farmByQuest
+						elseif chosenPlan.kind=="shiny" then questDrive.shinyByQuest=true; questDrive.farmByQuest = not tg.farmEnabled or questDrive.farmByQuest
+						elseif chosenPlan.kind=="prismatic" then questDrive.prismByQuest=true; questDrive.farmByQuest = not tg.farmEnabled or questDrive.farmByQuest
+						elseif chosenPlan.kind=="tower" then questDrive.towerByQuest = not tg.towerEnabled or questDrive.towerByQuest end
+						-- any combat-driving quest needs Auto Skill + Auto Switch on to actually WIN
+						local combatKinds = { farm=true, shiny=true, prismatic=true, challenge=true,
+							anyNpc=true, anyBoss=true, tower=true, dungeon=true, own=true }
+						if combatKinds[chosenPlan.kind] then ensureQuestCombat() end
+						pcall(driveQuestAction, chosenPlan, chosen)
+					elseif firstManual then
+						clearQuestDrivenFlags()
+						questDrive.lastTaskId = nil
+						pcall(Feature.showQuestWarning, firstManual.q.title)
+					else
+						clearQuestDrivenFlags()
+						questDrive.lastTaskId = nil
+						pcall(Feature.hideQuestWarning)
+					end
+				elseif questDrive.lastTaskId ~= nil then
+					clearQuestDrivenFlags()
+					questDrive.lastTaskId = nil
+					pcall(Feature.hideQuestWarning)
+				else
+					pcall(Feature.hideQuestWarning)
+				end
+				-- battle actions pace themselves
+				task.wait(3)
+			end
+			running=false
+		end)
+	end
+end
+
+---- 4c.6  TOWER ( HEY CHANGHOO I CANNOT TEST THIS)
+local Bindable = RS:FindFirstChild("Bindable")
+
+function Feature.towerEntranceInfo()
+	local TW = Runtime.TowerService
+	if not (TW and TW.getEntranceWindowData) then return nil end
+	local ok, a, b = pcall(TW.getEntranceWindowData)
+	if not ok then return nil end
+	return (typeof(a)=="table") and a or (typeof(b)=="table") and b or nil
+end
+
+do
+	local running=false
+	local lastResult = nil
+	local resultConn
+	local function hookResult()
+		if resultConn then return end
+		if Bindable and Bindable:FindFirstChild("Dungeon") and Bindable.Dungeon:FindFirstChild("CommTowerDungeonBattleResult") then
+			resultConn = Bindable.Dungeon.CommTowerDungeonBattleResult.Event:Connect(function(dungeonId, isWin)
+				lastResult = { dungeonId=dungeonId, isWin=isWin, at=os.clock() }
+			end)
+			table.insert(HubState._conns, resultConn)
+		end
+	end
+
+	function Feature.startTowerLoop()
+		if running then return end
+		running=true
+		hookResult()
+		task.spawn(function()
+			local entered=false
+			while HubState.toggles.towerEnabled and not HubState._killed do
+				local TW = Runtime.TowerService
+				if not TW then HubState._notify("Tower service unavailable","err"); break end
+				if not claimLock("tower") then task.wait(1); continue end
+
+				local rs = select(2, pcall(TW.getCurrentRuntimeState))
+				rs = (typeof(rs)=="table") and rs or {}
+
+				if not rs.isInTower and not entered then
+					local info = Feature.towerEntranceInfo()
+					local maxSel = (info and info.maxSelectableLayer) or 1
+					local startLayer = math.clamp(HubState.toggles.towerStartLayer or 1, 1, maxSel)
+					lastResult = nil
+					local ok, code = pcall(TW.startTowerDungeonFlow, startLayer)
+					HubState._notify("Tower: entering layer "..startLayer, "ok")
+					entered = true
+					task.wait(2.5) -- scene load
+				elseif rs.isInTower then
+					entered = true
+					local canBattle = select(2, pcall(TW.canEnterBattleNow))
+					if canBattle==true and Runtime.getCurrentBattle()==nil then
+						lastResult = nil
+						pcall(TW.requestEnterBattle)
+						local ts=os.clock()
+						while Runtime.getCurrentBattle()==nil and os.clock()-ts<8 and not HubState._killed do task.wait(0.3) end
+						local tb=os.clock()
+						while Runtime.getCurrentBattle()~=nil and os.clock()-tb<180 and not HubState._killed do task.wait(0.4) end
+						task.wait(1.2)
+						local r = lastResult
+						if r and r.isWin==false then
+							if HubState.toggles.towerExitOnLoss then
+								pcall(TW.requestExitTower, "AutoTowerLoss")
+								HubState._notify("Tower: lost — exiting", nil)
+								entered=false; task.wait(1)
+							else
+								HubState._notify("Tower: lost — retrying floor", nil)
+							end
+						elseif r and r.isWin==true then
+							HubState._notify("Tower: floor cleared", "ok")
+							task.wait(2)
+						end
+					else
+						task.wait(1)
+					end
+				else
+					task.wait(1)
+				end
+			end
+			pcall(function()
+				local TW=Runtime.TowerService
+				if TW and TW.getCurrentRuntimeState then
+					local rs = select(2, pcall(TW.getCurrentRuntimeState))
+					if typeof(rs)=="table" and rs.isInTower then TW.requestExitTower("AutoTowerOff") end
+				end
+			end)
+			releaseLock("tower")
+			running=false
+		end)
+	end
+end
+
+-- 4c.7  BOSS 
+function Feature.islandBossOptions()
+	local opts = {}
+	local CDM, CCn, NC = Runtime.ConfigDataManager, Runtime.ConfigConst, Runtime.NpcConst
+	if not (CDM and CCn and NC and NC.BOSS_TYPE) then return opts end
+	local ok, all = pcall(CDM.getTable, CCn.ConfigName.NPC)
+	if not ok or typeof(all)~="table" then return opts end
+	local list = {}
+	for npcId, cfg in pairs(all) do
+		if cfg.bossType == NC.BOSS_TYPE.ISLAND_ELITE then
+			list[#list+1] = { npcId=npcId, name=cfg.npcHeadShowName or cfg.npcName or ("Boss "..tostring(npcId)) }
+		end
+	end
+	table.sort(list, function(a,b) return a.npcId < b.npcId end)
+	for _,b in ipairs(list) do opts[#opts+1] = { label=b.name.." ("..tostring(b.npcId)..")", value=b.npcId } end
+	return opts
+end
+
+-- resolve npcId -> battleId via BattlePool.positionTrainers[1]==npcId (cached)
+local _bossBattleIdMap
+local function bossBattleId(npcId)
+	if not _bossBattleIdMap then
+		_bossBattleIdMap = {}
+		local CDM, CCn = Runtime.ConfigDataManager, Runtime.ConfigConst
+		if CDM and CCn then
+			local ok, pool = pcall(CDM.getTable, CCn.ConfigName.BATTLE_POOL)
+			if ok and typeof(pool)=="table" then
+				for battleId, cfg in pairs(pool) do
+					if typeof(cfg.positionTrainers)=="table" and cfg.positionTrainers[1] then
+						_bossBattleIdMap[cfg.positionTrainers[1]] = battleId
+					end
+				end
+			end
+		end
+	end
+	return _bossBattleIdMap[npcId]
+end
+HubState.bossBattleId = bossBattleId
+
+-- island-boss target record for the Engage.boss loop {npcId, name, battleId}
+local _islandBossById
+function HubState.bossById(npcId)
+	if not _islandBossById then
+		_islandBossById = {}
+		local CDM, CCn, NC = Runtime.ConfigDataManager, Runtime.ConfigConst, Runtime.NpcConst
+		if CDM and CCn and NC and NC.BOSS_TYPE then
+			local ok, all = pcall(CDM.getTable, CCn.ConfigName.NPC)
+			if ok and typeof(all)=="table" then
+				for id, cfg in pairs(all) do
+					if cfg.bossType == NC.BOSS_TYPE.ISLAND_ELITE then
+						_islandBossById[id] = {
+							npcId = id,
+							name = cfg.npcHeadShowName or cfg.npcName or ("Boss "..tostring(id)),
+							battleId = bossBattleId(id),
+							isBoss = true,
+						}
+					end
+				end
+			end
+		end
+	end
+	return _islandBossById[npcId]
+end
+
+-- is the given boss currently challengeable (refreshTime in the past / no entry)?
+function Feature.isBossAvailable(npcId)
+	local RSvc = Runtime.RefreshService
+	if not (RSvc and RSvc.getBossRefreshInfoList) then return true end -- unknown -> assume yes
+	local ok, list = pcall(RSvc.getBossRefreshInfoList)
+	if not ok or typeof(list)~="table" then return true end
+	local now = workspace:GetServerTimeNow()
+	for _,e in ipairs(list) do
+		if e.npcId==npcId then return now >= (e.refreshTime or 0) end
+	end
+	return true -- no entry => never defeated / already up
+end
+function Feature.refreshBossInfo()
+	local RSvc = Runtime.RefreshService
+	if RSvc and RSvc.init then pcall(RSvc.init) end
+end
+
+-- ----- Boss-farm state persistence (survives TeleportService server hop) -----
+local BOSS_STATE_PATH = "Nousigi/BossFarmState.json"
+function Feature.saveBossState()
+	if typeof(writefile)~="function" then return end
+	if typeof(isfolder)=="function" and not isfolder("Nousigi") then pcall(makefolder, "Nousigi") end
+	local tg = HubState.toggles
+	local data = {
+		autoFarmBoss = tg.bossEnabled and true or false,
+		autoHopBoss  = tg.autoHopBoss and true or false,
+		bossId       = tg.bossTargetId,
+		hopCooldownSec = tg.hopCooldownSec or 20,
+		savedAt = os.time(),
+	}
+	pcall(writefile, BOSS_STATE_PATH, HttpService:JSONEncode(data))
+end
+function Feature.loadBossState()
+	if typeof(isfile)~="function" or typeof(readfile)~="function" then return nil end
+	if not isfile(BOSS_STATE_PATH) then return nil end
+	local ok, raw = pcall(readfile, BOSS_STATE_PATH)
+	if not ok or not raw or raw=="" then return nil end
+	local ok2, data = pcall(function() return HttpService:JSONDecode(raw) end)
+	return ok2 and data or nil
+end
+
+do
+	local running=false
+	function Feature.startBossHopLoop()
+		if running then return end
+		running=true
+		task.spawn(function()
+			local lastHopAt = 0
+			while not HubState._killed do
+				local tg = HubState.toggles
+				if tg.autoHopBoss and tg.bossEnabled and tg.bossTargetId then
+					if not Feature.isBossAvailable(tg.bossTargetId) and Runtime.getCurrentBattle()==nil then
+						local cd = tg.hopCooldownSec or 20
+						if os.clock()-lastHopAt >= cd then
+							lastHopAt = os.clock()
+							Feature.saveBossState()
+							HubState._notify("Boss on cooldown — hopping server...", nil)
+							task.wait(0.5)
+							pcall(function()
+								game:GetService("TeleportService"):Teleport(game.PlaceId, player)
+							end)
+						end
+					end
+				end
+				task.wait(2)
+			end
+			running=false
+		end)
+	end
+end
+
+--CONFIG
+
+local CFG_DIR = "Nousigi/configs"
+local AUTOLOAD_PATH = "Nousigi/autoload.json"
+
+local function ensureFolders()
+	if typeof(makefolder)~="function" or typeof(isfolder)~="function" then return end
+	if not isfolder("Nousigi") then pcall(makefolder, "Nousigi") end
+	if not isfolder(CFG_DIR) then pcall(makefolder, CFG_DIR) end
+end
+local function sanitizeName(raw)
+	raw = tostring(raw or ""):gsub("%s+"," "):gsub("^%s*(.-)%s*$","%1")
+	raw = raw:gsub('[^%w%-%_ ]', "")
+	if #raw > 48 then raw = raw:sub(1,48) end
+	return raw
+end
+local function cfgPath(name) return CFG_DIR.."/"..sanitizeName(name)..".json" end
+
+local function captureState()
+	local tg = HubState.toggles
+	local snap = { toggles={}, ballConfig={}, keepGrades={} }
+	for k,v in pairs(tg) do
+		local t=typeof(v)
+		if t=="boolean" or t=="number" or t=="string" then snap.toggles[k]=v end
+	end
+	for k,v in pairs(HubState.ballConfig) do snap.ballConfig[k]=v end
+	for g,on in pairs(tg.keepGrades or {}) do if on then snap.keepGrades[g]=true end end
+	return snap
+end
+
+-- apply a loaded 
+HubState._configControls = {} 
+local function applyState(snap)
+	if typeof(snap)~="table" then return false end
+	local tg = HubState.toggles
+	if typeof(snap.toggles)=="table" then
+		for k,v in pairs(snap.toggles) do
+			if tg[k]~=nil or type(v)~="table" then tg[k]=v end
+		end
+	end
+	if typeof(snap.ballConfig)=="table" then
+		for k,v in pairs(snap.ballConfig) do HubState.ballConfig[k]=v end
+	end
+	tg.keepGrades = {}
+	if typeof(snap.keepGrades)=="table" then
+		for g,on in pairs(snap.keepGrades) do if on then tg.keepGrades[g]=true end end
+	end
+	for key, ctl in pairs(HubState._configControls) do
+		pcall(function()
+			if ctl.kind=="toggle" and tg[key]~=nil and ctl.handle.SetSilent then
+				ctl.handle:SetSilent(tg[key] and true or false)
+			elseif ctl.kind=="value" and ctl.handle.Set then
+				local val = tg[key]
+				if val~=nil then ctl.handle:Set(val) end
+			end
+		end)
+	end
+	-- (re)start the background/engagement loops implied by the loaded toggles
+	Feature.applyLoadedToggles()
+	return true
+end
+HubState._captureState = captureState
+HubState._applyState = applyState
+
+-- start whatever loops the current toggle values imply (used by config-load + bootstrap)
+function Feature.applyLoadedToggles()
+	local tg = HubState.toggles
+	if tg.antiAfk then Feature.setAntiAfk(true) end
+	if tg.fpsBoost then Feature.setFpsBoost(true) end
+	if tg.autoCleanUp then Feature.startCleanUpWatchdog() end
+	if tg.autoClaimBattlepass or tg.autoClaimLevel or tg.autoClaimIndex then Feature.startRewardsLoop() end
+	if tg.autoBuy then Feature.startMerchantLoop() end
+	if tg.autoRelease then Feature.startReleaseLoop() end
+	if tg.autoClaimQuests or tg.autoDoQuest then Feature.startQuestLoop() end
+	if tg.farmEnabled then HubState.Engage.farm.start() end
+	if tg.npcEnabled then HubState.Engage.npc.start() end
+	if tg.bossEnabled then HubState.Engage.boss.start() end
+	if tg.autoHopBoss then Feature.startBossHopLoop() end
+	if tg.towerEnabled then Feature.startTowerLoop() end
+end
+
+function Feature.listConfigs()
+	ensureFolders()
+	local names = {}
+	if typeof(listfiles)~="function" then return names end
+	local ok, files = pcall(listfiles, CFG_DIR)
+	if not ok or typeof(files)~="table" then return names end
+	for _,f in ipairs(files) do
+		local n = tostring(f):match("([^/\\]+)%.json$")
+		if n then names[#names+1]=n end
+	end
+	table.sort(names, function(a,b) return a:lower()<b:lower() end)
+	return names
+end
+function Feature.saveConfig(name, overwrite)
+	ensureFolders()
+	name = sanitizeName(name)
+	if name=="" then return false, "empty name" end
+	if typeof(writefile)~="function" then return false, "no file api" end
+	local path = cfgPath(name)
+	if not overwrite and typeof(isfile)=="function" and isfile(path) then return false, "exists" end
+	local ok = pcall(writefile, path, HttpService:JSONEncode(captureState()))
+	return ok, ok and "saved" or "write failed"
+end
+function Feature.loadConfig(name)
+	local path = cfgPath(name)
+	if typeof(isfile)~="function" or not isfile(path) then return false, "not found" end
+	local ok, raw = pcall(readfile, path)
+	if not ok or not raw then return false, "read failed" end
+	local ok2, snap = pcall(function() return HttpService:JSONDecode(raw) end)
+	if not ok2 then return false, "corrupt config" end
+	return applyState(snap), "loaded"
+end
+function Feature.deleteConfig(name)
+	local path = cfgPath(name)
+	if typeof(delfile)~="function" then return false, "no file api" end
+	if typeof(isfile)=="function" and not isfile(path) then return false, "not found" end
+	if Feature.getAutoLoad()==sanitizeName(name) then Feature.clearAutoLoad() end
+	local ok = pcall(delfile, path)
+	return ok, ok and "deleted" or "delete failed"
+end
+function Feature.getAutoLoad()
+	if typeof(isfile)~="function" or not isfile(AUTOLOAD_PATH) then return nil end
+	local ok, raw = pcall(readfile, AUTOLOAD_PATH)
+	if not ok or not raw then return nil end
+	local ok2, data = pcall(function() return HttpService:JSONDecode(raw) end)
+	return (ok2 and typeof(data)=="table") and data.config or nil
+end
+function Feature.setAutoLoad(name)
+	ensureFolders()
+	if typeof(writefile)~="function" then return false end
+	local ok = pcall(writefile, AUTOLOAD_PATH, HttpService:JSONEncode({ config=sanitizeName(name) }))
+	return ok
+end
+function Feature.clearAutoLoad()
+	if typeof(writefile)~="function" then return false end
+	local ok = pcall(writefile, AUTOLOAD_PATH, HttpService:JSONEncode({}))
+	return ok
+end
+
+
+-- Cleanup on destroy
+Window:OnDestroy(function()
+	HubState._killed = true
+	BattleLoop:stop()
+	HubState.toggles.farmEnabled=false; HubState.toggles.npcEnabled=false; HubState.toggles.bossEnabled=false
+	for _,c in ipairs(HubState._conns) do pcall(function() c:Disconnect() end) end
+	pcall(function() if HubState._warnGui then HubState._warnGui:Destroy() end end)
+end)
+
+-- ---- Ball option list helper ---
+-- prepend a "None" entry (value=false) so a dropdown selection can be cleared
+local function withNone(opts)
+	local out = { { label="None", value=false } }
+	for _,o in ipairs(opts or {}) do out[#out+1] = o end
+	return out
+end
+
+local function ballOptions(includeNone)
+	local opts = {}
+	if includeNone then opts[#opts+1] = { label="None", value=false } end
+	local names = { [Runtime.BALL.NORMAL]="Normal Ball (inf)", [Runtime.BALL.HIGH]="High Ball",
+		[Runtime.BALL.KING]="King Ball", [Runtime.BALL.PRISM]="Prism Ball" }
+	if Runtime.GetBallDataModule and Runtime.GetBallDataModule.getBallInfoList then
+		local ok,list = pcall(Runtime.GetBallDataModule.getBallInfoList)
+		if ok and typeof(list)=="table" then
+			for _,b in ipairs(list) do
+				local nm = names[b.itemId] or ("Ball "..tostring(b.itemId))
+				if not b.isInfinite then nm = nm.." (x"..tostring(math.floor(b.num or 0))..")" end
+				opts[#opts+1] = { label=nm, value=b.itemId }
+			end
+			return opts
+		end
+	end
+	for id,nm in pairs(names) do opts[#opts+1]={label=nm, value=id} end
+	return opts
+end
+
+
+-- battle tab (Direct WindUI Toggle API)
+local Toggles = {} 
+
+local sBattle = battleTab:Section({ 
+	Title = "Battle", 
+	Opened = true 
+})
+
+Toggles.autoSkill = sBattle:Toggle({
+	Title = "Auto Skill",
+	Desc = "Use strongest skill (any battle)",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.autoSkill = v
+	end
+})
+
+Toggles.autoSwitchDeadPet = sBattle:Toggle({
+	Title = "Auto Switch Dead Pet",
+	Desc = "pet1 dead -> next alive pet",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.autoSwitchDeadPet = v
+	end
+})
+
+Toggles.autoCatch = sBattle:Toggle({
+	Title = "Auto Catch",
+	Desc = "Catch anything (auto-on with Farm)",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.autoCatch = v
+		if v then clearMutationToggles() end
+	end
+})
+
+Toggles.autoCatchShiny = sBattle:Toggle({
+	Title = "Auto Catch Shiny",
+	Desc = "Only catch shiny (set Farm target)",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.autoCatchShiny = v
+		if v and HubState.toggles.autoCatch then
+			HubState.toggles.autoCatch = false
+			Toggles.autoCatch:Set(false, false)
+		end
+	end
+})
+
+Toggles.autoCatchPrismatic = sBattle:Toggle({
+	Title = "Auto Catch Prismatic",
+	Desc = "Only catch prismatic (set Farm target)",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.autoCatchPrismatic = v
+		if v and HubState.toggles.autoCatch then
+			HubState.toggles.autoCatch = false
+			Toggles.autoCatch:Set(false, false)
+		end
+	end
+})
+
+Toggles.autoCatchShinyPrismatic = sBattle:Toggle({
+	Title = "Auto Catch Shiny+Prismatic",
+	Desc = "Only catch shiny+prismatic (set Farm target)",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.autoCatchShinyPrismatic = v
+		if v and HubState.toggles.autoCatch then
+			HubState.toggles.autoCatch = false
+			Toggles.autoCatch:Set(false, false)
+		end
+	end
+})
+
+-- toggles
+HubState._configControls.autoSkill = {
+	kind = "toggle",
+	handle = Toggles.autoSkill
+}
+HubState._configControls.autoSwitchDeadPet = {
+	kind = "toggle",
+	handle = Toggles.autoSwitchDeadPet
+}
+HubState._configControls.autoCatch = {
+	kind = "toggle",
+	handle = Toggles.autoCatch
+}
+HubState._configControls.autoCatchShiny = {
+	kind = "toggle",
+	handle = Toggles.autoCatchShiny
+}
+HubState._configControls.autoCatchPrismatic = {
+	kind = "toggle",
+	handle = Toggles.autoCatchPrismatic
+}
+HubState._configControls.autoCatchShinyPrismatic = {
+	kind = "toggle",
+	handle = Toggles.autoCatchShinyPrismatic
+}
+
+-- Pacing section (Direct WindUI Dropdown API)
+local sPacing = battleTab:Section({
+	Title = "Battle Speed",
+	Opened = true
+})
+
+local pacingDD = sPacing:Dropdown({
+	Title = "Battle Speed",
+	Desc = "Bypass Speed = everything on: free 2x (no gamepass), instant round-ack, cut skill/effect animation both sides, zero per-skill post-cast wait, skip opening, skip switch-pet VFX, skip post-win capture popup, spam skill/switch submission.",
+	Values = {
+		"Normal",
+		"Bypass Speed"
+	},
+	Value = "Normal",
+	Callback = function(label)
+		local v = (label == "Bypass Speed") and "fastBattle" or "normal"
+		Pacing:apply(v)
+		HubState._notify(
+			v == "fastBattle" and "Battle Speed: BYPASS" or "Battle Speed: Normal",
+			"ok"
+		)
+	end
+})
+
+-- Ball Config (Direct WindUI Dropdown API)
+local sBall = battleTab:Section({
+	Title = "Ball Config",
+	Opened = true
+})
+
+-- Helper: convert {label,value} options to WindUI format (Values array + callback map)
+local function ballOptionsToValues(opts)
+	local vals = {}
+	local map = {}
+	for _, o in ipairs(opts) do
+		vals[#vals + 1] = o.label
+		map[o.label] = o.value
+	end
+	return vals, map
+end
+
+local normalBallVals, normalBallMap = ballOptionsToValues(ballOptions(false))
+sBall:Dropdown({
+	Title = "Normal Ball",
+	Values = normalBallVals,
+	Value = normalBallVals[1] or "Normal Ball (inf)",
+	Callback = function(label)
+		HubState.ballConfig.normal = normalBallMap[label]
+	end
+})
+
+local shinyBallVals, shinyBallMap = ballOptionsToValues(ballOptions(true))
+sBall:Dropdown({
+	Title = "Shiny Ball",
+	Values = shinyBallVals,
+	Value = "None",
+	Callback = function(label)
+		HubState.ballConfig.shiny = shinyBallMap[label] or nil
+	end
+})
+
+local prismBallVals, prismBallMap = ballOptionsToValues(ballOptions(true))
+sBall:Dropdown({
+	Title = "Prismatic Ball",
+	Values = prismBallVals,
+	Value = "None",
+	Callback = function(label)
+		HubState.ballConfig.prismatic = prismBallMap[label] or nil
+	end
+})
+
+local shinyPrismBallVals, shinyPrismBallMap = ballOptionsToValues(ballOptions(true))
+sBall:Dropdown({
+	Title = "Shiny Prismatic Ball",
+	Values = shinyPrismBallVals,
+	Value = "None",
+	Callback = function(label)
+		HubState.ballConfig.shinyPrismatic = shinyPrismBallMap[label] or nil
+	end
+})
+
+-- Helper: Dropdown wrapper untuk support {label,value} options + SetOptions/Set/Get API
+local function createDropdownWrapper(section, config)
+	local labelOf, valueOf = {}, {}
+	local function rebuildMaps(options)
+		labelOf, valueOf = {}, {}
+		local labels = {}
+		for _,o in ipairs(options or {}) do
+			local lbl, val
+			if typeof(o)=="table" then lbl, val = tostring(o.label), o.value
+			else lbl, val = tostring(o), o end
+			labels[#labels+1] = lbl
+			valueOf[lbl] = val
+			labelOf[tostring(val)] = lbl
+		end
+		return labels
+	end
+	local labels = rebuildMaps(config.options or {})
+	local defaultVal = config.default
+	local defaultLabel = (defaultVal~=nil and labelOf[tostring(defaultVal)]) or (labels[1])
+	
+	local suppress = false
+	local windDrop = section:Dropdown({
+		Title = config.title or "",
+		Desc = config.desc or "",
+		Values = labels,
+		Value = defaultLabel or "",
+		Callback = function(label)
+			if suppress then return end
+			if config.onChange then task.spawn(config.onChange, valueOf[label], label) end
+		end
+	})
+	
+	return {
+		SetOptions = function(_, newOpts, keepSel)
+			local prevLabel = windDrop.Value
+			labels = rebuildMaps(newOpts)
+			suppress = true
+			pcall(function() windDrop:Refresh(labels) end)
+			if keepSel and prevLabel and valueOf[prevLabel]~=nil then
+				pcall(function() windDrop:Select(prevLabel) end)
+			else
+				pcall(function() windDrop:Select(labels[1] or "") end)
+			end
+			suppress = false
+		end,
+		Set = function(_, value, fire)
+			local lbl = labelOf[tostring(value)]
+			if not lbl then return end
+			suppress = (fire==false)
+			pcall(function() windDrop:Select(lbl) end)
+			suppress = false
+		end,
+		Get = function(_)
+			local lbl = windDrop.Value
+			return valueOf[lbl], lbl
+		end,
+	}
+end
+
+-- farm tab (Direct WindUI API)
+local sFarm = farmTab:Section({
+	Title = "Auto Farm",
+	Opened = true
+})
+
+local farmTargetDD = createDropdownWrapper(sFarm, {
+	title = "Target Pet",
+	desc = "Nearest matching wild pet",
+	options = withNone(HubState.liveWildPetOptions()),
+	default = false,
+	onChange = function(v)
+		HubState.toggles.farmTargetConfigId = v or nil
+	end
+})
+
+sFarm:Button({
+	Title = "Refresh Pet List",
+	Callback = function()
+		farmTargetDD:SetOptions(withNone(HubState.liveWildPetOptions()), true)
+		HubState._notify("Pet list refreshed", "ok")
+	end
+})
+
+local farmTgl = sFarm:Toggle({
+	Title = "Auto Farm",
+	Desc = "Walk to & battle target pet (any if none set)",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.farmEnabled = v
+		if v then
+			if not (HubState.toggles.autoCatchShiny or HubState.toggles.autoCatchPrismatic or HubState.toggles.autoCatchShinyPrismatic) then
+				HubState.toggles.autoCatch = true
+				if Toggles.autoCatch then
+					Toggles.autoCatch:Set(true, false)
+				end
+			end
+			if not HubState.toggles.autoSkill then
+				HubState.toggles.autoSkill = true
+				if Toggles.autoSkill then
+					Toggles.autoSkill:Set(true, false)
+				end
+			end
+			HubState.Engage.farm.start()
+			HubState._notify("Auto Farm ON", "ok")
+		else
+			HubState._notify("Auto Farm OFF", nil)
+		end
+	end
+})
+HubState._configControls.farmEnabled = { kind = "toggle", handle = farmTgl }
+
+-- Auto NPC (Direct WindUI API)
+local sNpc = farmTab:Section({
+	Title = "Auto NPC",
+	Opened = true
+})
+
+local npcDD = createDropdownWrapper(sNpc, {
+	title = "Target NPC",
+	desc = "Regular trainers (no cooldown)",
+	options = withNone(HubState.npcOptions(false)),
+	default = false,
+	onChange = function(v)
+		HubState.toggles.npcTargetId = v or nil
+	end
+})
+
+sNpc:Button({
+	Title = "Refresh NPC List",
+	Callback = function()
+		npcDD:SetOptions(withNone(HubState.npcOptions(false)), true)
+		HubState._notify("NPC list refreshed", "ok")
+	end
+})
+
+local npcTgl = sNpc:Toggle({
+	Title = "Auto NPC",
+	Desc = "Repeatedly challenge the trainer",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.npcEnabled = v
+		if v then
+			if not HubState.toggles.autoSkill then
+				HubState.toggles.autoSkill = true
+				if Toggles.autoSkill then
+					Toggles.autoSkill:Set(true, false)
+				end
+			end
+			HubState.Engage.npc.start()
+			HubState._notify("Auto NPC ON", "ok")
+		else
+			HubState._notify("Auto NPC OFF", nil)
+		end
+	end
+})
+HubState._configControls.npcEnabled = {
+	kind = "toggle",
+	handle = npcTgl
+}
+
+-- Auto Boss (Direct WindUI API)
+local sBoss = farmTab:Section({
+	Title = "Auto Boss",
+	Opened = true
+})
+
+local bossDD = createDropdownWrapper(sBoss, {
+	title = "Target Boss",
+	desc = "Island bosses (respawn on a timer)",
+	options = withNone(HubState.Feature.islandBossOptions()),
+	default = false,
+	onChange = function(v)
+		HubState.toggles.bossTargetId = v or nil
+	end
+})
+
+sBoss:Button({
+	Title = "Refresh Boss List",
+	Callback = function()
+		HubState.Feature.refreshBossInfo()
+		bossDD:SetOptions(withNone(HubState.Feature.islandBossOptions()), true)
+		HubState._notify("Boss list refreshed", "ok")
+	end
+})
+
+local bossTgl = sBoss:Toggle({
+	Title = "Auto Farm Boss",
+	Desc = "Challenge the boss when available",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.bossEnabled = v
+		if v then
+			if not HubState.toggles.autoSkill then
+				HubState.toggles.autoSkill = true
+				if Toggles.autoSkill then
+					Toggles.autoSkill:Set(true, false)
+				end
+			end
+			HubState.Engage.boss.start()
+			HubState._notify("Auto Boss ON", "ok")
+		else
+			HubState._notify("Auto Boss OFF", nil)
+		end
+		HubState.Feature.saveBossState()
+	end
+})
+HubState._configControls.bossEnabled = {
+	kind = "toggle",
+	handle = bossTgl
+}
+
+local hopTgl = sBoss:Toggle({
+	Title = "Auto Hop Boss",
+	Desc = "Hop servers when boss is on cooldown (needs Auto Farm Boss)",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.autoHopBoss = v
+		if v then
+			HubState.Feature.startBossHopLoop()
+			HubState._notify("Auto Hop Boss ON", "ok")
+		else
+			HubState._notify("Auto Hop Boss OFF", nil)
+		end
+		HubState.Feature.saveBossState()
+	end
+})
+HubState._configControls.autoHopBoss = {
+	kind = "toggle",
+	handle = hopTgl
+}
+
+local hopSlider = sBoss:Slider({
+	Title = "Hop Cooldown (s)",
+	Value = {
+		Min = 0,
+		Max = 100,
+		Default = HubState.toggles.hopCooldownSec or 20
+	},
+	Step = 1,
+	Callback = function(v)
+		HubState.toggles.hopCooldownSec = v
+		HubState.Feature.saveBossState()
+	end
+})
+HubState._configControls.hopCooldownSec = {
+	kind = "value",
+	handle = hopSlider
+}
+
+-- Utilities (Direct WindUI API)
+local sUtil = farmTab:Section({
+	Title = "Utilities",
+	Opened = true
+})
+
+sUtil:Button({
+	Title = "Claim All Chests",
+	Callback = function()
+		HubState.Feature.claimAllChests()
+	end
+})
+
+local antiAfkTgl = sUtil:Toggle({
+	Title = "Anti AFK",
+	Desc = "Prevent the idle disconnect",
+	Value = false,
+	Callback = function(v)
+		HubState.Feature.setAntiAfk(v)
+		HubState._notify(
+			v and "Anti-AFK ON" or "Anti-AFK OFF",
+			v and "ok" or nil
+		)
+	end
+})
+HubState._configControls.antiAfk = {
+	kind = "toggle",
+	handle = antiAfkTgl
+}
+
+local fpsTgl = sUtil:Toggle({
+	Title = "FPS Boost",
+	Desc = "Disable particles/lights/effects",
+	Value = false,
+	Callback = function(v)
+		HubState.Feature.setFpsBoost(v)
+		if not v then
+			HubState._notify("FPS boost off (rejoin to fully restore)", nil)
+		end
+	end
+})
+HubState._configControls.fpsBoost = {
+	kind = "toggle",
+	handle = fpsTgl
+}
+
+sUtil:Button({
+	Title = "Clean Up UI Now",
+	Callback = function()
+		HubState.Feature.cleanUpUI()
+	end
+})
+
+local cleanTgl = sUtil:Toggle({
+	Title = "Auto Clean Up",
+	Desc = "Auto-recover a stuck battle / lingering battle UI",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.autoCleanUp = v
+		if v then
+			HubState.Feature.startCleanUpWatchdog()
+			HubState._notify("Auto Clean Up ON", "ok")
+		else
+			HubState._notify("Auto Clean Up OFF", nil)
+		end
+	end
+})
+HubState._configControls.autoCleanUp = {
+	kind = "toggle",
+	handle = cleanTgl
+}
+
+-- Rewards (Direct WindUI API)
+local sRew = farmTab:Section({ Title="Rewards", Opened=true })
+local bpTgl = sRew:Toggle({ Title="Auto Claim Battlepass", Desc="Claim battlepass rewards periodically", Value=false,
+	Callback=function(v) HubState.toggles.autoClaimBattlepass=v; if v then HubState.Feature.startRewardsLoop() end end })
+HubState._configControls.autoClaimBattlepass = { kind="toggle", handle=bpTgl }
+local lvlTgl = sRew:Toggle({ Title="Auto Claim Level Reward", Desc="Claim level-up rewards periodically", Value=false,
+	Callback=function(v) HubState.toggles.autoClaimLevel=v; if v then HubState.Feature.startRewardsLoop() end end })
+HubState._configControls.autoClaimLevel = { kind="toggle", handle=lvlTgl }
+local idxTgl = sRew:Toggle({ Title="Auto Claim Index Reward", Desc="Claim pet-index rewards periodically", Value=false,
+	Callback=function(v) HubState.toggles.autoClaimIndex=v; if v then HubState.Feature.startRewardsLoop() end end })
+HubState._configControls.autoClaimIndex = { kind="toggle", handle=idxTgl }
+sRew:Button({ Title="Claim All Rewards Now", Callback=function() HubState.Feature.claimAllRewardsNow() end })
+
+-- Merchant (Direct WindUI API)
+local sMerch = farmTab:Section({ Title="Merchant", Opened=true })
+local merchDD = createDropdownWrapper(sMerch, { title="Items to Buy", desc="Traveling merchant stock (live)",
+	options={}, default=false, onChange=function() end })
+sMerch:Button({ Title="Refresh Merchant", Callback=function()
+	merchDD:SetOptions(HubState.Feature.merchantOptions(), true)
+	HubState._notify("Merchant refreshed", "ok")
+end })
+local buyTgl = sMerch:Toggle({ Title="Auto Buy", Desc="Buy every purchasable item on a timer", Value=false,
+	Callback=function(v) HubState.toggles.autoBuy=v; if v then HubState.Feature.startMerchantLoop(); HubState._notify("Auto Buy ON","ok") else HubState._notify("Auto Buy OFF",nil) end end })
+HubState._configControls.autoBuy = { kind="toggle", handle=buyTgl }
+sMerch:Button({ Title="Buy All Now", Callback=function() HubState.Feature.buyAllMerchant() end })
+task.spawn(function()
+	local ok, opts = pcall(HubState.Feature.merchantOptions)
+	if ok and typeof(opts)=="table" and #opts > 0 then
+		pcall(function() merchDD:SetOptions(opts, true) end)
+	end
+end)
+
+-- pet tab (Direct WindUI API)
+local sRel = petsTab:Section({ Title="Release", Opened=true })
+local relDD = createDropdownWrapper(sRel, { title="Pet to Release", desc="Pick a pet, then Release Selected",
+	options=withNone(HubState.Feature.petReleaseOptions()), default=false,
+	onChange=function(v) HubState.toggles.releaseTargetUuid = v or nil end })
+sRel:Button({ Title="Refresh Pet List", Callback=function()
+	relDD:SetOptions(withNone(HubState.Feature.petReleaseOptions()), true)
+	HubState._notify("Pet list refreshed", "ok")
+end })
+sRel:Button({ Title="Release Selected", Callback=function()
+	local uuid = HubState.toggles.releaseTargetUuid
+	if not uuid then HubState._notify("Pick a pet first", "err"); return end
+	local code = HubState.Feature.releaseOne(uuid)
+	if code==20000 then
+		HubState._notify("Released pet", "ok")
+		relDD:SetOptions(withNone(HubState.Feature.petReleaseOptions()), true)
+	else
+		HubState._notify("Release failed ("..tostring(code)..") — locked/loved/in-team?", "err")
+	end
+end })
+
+-- Auto Lock (Direct WindUI API)
+local sLock = petsTab:Section({ Title="Auto Lock", Opened=true })
+local lockShinyT = sLock:Toggle({ Title="Lock Shiny", Desc="Native-lock all shiny pets", Value=false,
+	Callback=function(v) HubState.toggles.autoLockShiny=v end })
+HubState._configControls.autoLockShiny = { kind="toggle", handle=lockShinyT }
+local lockPrismT = sLock:Toggle({ Title="Lock Prismatic", Desc="Native-lock all prismatic pets", Value=false,
+	Callback=function(v) HubState.toggles.autoLockPrismatic=v end })
+HubState._configControls.autoLockPrismatic = { kind="toggle", handle=lockPrismT }
+local lockSSST = sLock:Toggle({ Title="Lock SSS Talent", Desc="Native-lock all SSS-talent pets", Value=false,
+	Callback=function(v) HubState.toggles.autoLockSSS=v end })
+HubState._configControls.autoLockSSS = { kind="toggle", handle=lockSSST }
+sLock:Button({ Title="Lock Matching Now", Callback=function()
+	if not (HubState.toggles.autoLockShiny or HubState.toggles.autoLockPrismatic or HubState.toggles.autoLockSSS) then
+		HubState._notify("Enable a lock rule first", "err"); return
+	end
+	HubState._notify("Locking matching pets...", "ok")
+	task.spawn(function()
+		local n = HubState.Feature.lockMatchingNow()
+		HubState._notify("Locked "..n.." pets", "ok")
+	end)
+end })
+
+-- Keep & Auto Release (Direct WindUI API)
+local sKeep = petsTab:Section({ Title="Keep & Auto Release", Opened=true })
+local keepShinyT = sKeep:Toggle({ Title="Keep Shiny", Desc="Never release shiny pets", Value=false,
+	Callback=function(v) HubState.toggles.keepShiny=v end })
+HubState._configControls.keepShiny = { kind="toggle", handle=keepShinyT }
+local keepPrismT = sKeep:Toggle({ Title="Keep Prismatic", Desc="Never release prismatic pets", Value=false,
+	Callback=function(v) HubState.toggles.keepPrismatic=v end })
+HubState._configControls.keepPrismatic = { kind="toggle", handle=keepPrismT }
+local GRADES = { "C","B","A","S","SSS" }
+for _,g in ipairs(GRADES) do
+	sKeep:Toggle({ Title="Keep Grade "..g, Desc="Never release "..g.."-talent pets", Value=false,
+		Callback=function(v) HubState.toggles.keepGrades[g] = v and true or nil end })
+end
+local relTgl = sKeep:Toggle({ Title="Auto Release", Desc="Release pets not locked/kept (DESTRUCTIVE)", Value=false,
+	Callback=function(v)
+		HubState.toggles.autoRelease=v
+		if v then HubState.Feature.startReleaseLoop(); HubState._notify("Auto Release ON — check keep rules!", "err")
+		else HubState._notify("Auto Release OFF", nil) end
+	end })
+HubState._configControls.autoRelease = { kind="toggle", handle=relTgl }
+
+-- auto tab (Direct WindUI API)
+local sQuest = autoTab:Section({ Title="Quests", Opened=true })
+local claimQT = sQuest:Toggle({ Title="Auto Claim Quests", Desc="Claim completed quests + activity reward", Value=false,
+	Callback=function(v) HubState.toggles.autoClaimQuests=v; if v then HubState.Feature.startQuestLoop(); HubState._notify("Auto Claim Quests ON","ok") else HubState._notify("Auto Claim Quests OFF",nil) end end })
+HubState._configControls.autoClaimQuests = { kind="toggle", handle=claimQT }
+local doQT = sQuest:Toggle({ Title="Auto Do Quest", Desc="Drives quests: fights quest NPCs/bosses, farms, hunts, chests, tower. Auto-claims too.", Value=false,
+	Callback=function(v)
+		HubState.toggles.autoDoQuest=v
+		if v then
+			HubState.toggles.autoClaimQuests=true
+			if HubState._configControls.autoClaimQuests then
+				pcall(function() HubState._configControls.autoClaimQuests.handle:Set(true, false) end)
+			end
+			HubState.Feature.startQuestLoop()
+			HubState._notify("Auto Do Quest ON","ok")
+		else
+			HubState._notify("Auto Do Quest OFF",nil)
+		end
+	end })
+HubState._configControls.autoDoQuest = { kind="toggle", handle=doQT }
+
+-- Tower (Direct WindUI API - Clean)
+local sTower = autoTab:Section({ Title="Tower", Opened=true })
+local towerLayerSlider = sTower:Slider({
+	Title = "Start Layer",
+	Value = { Min=1, Max=200, Default=HubState.toggles.towerStartLayer or 1 },
+	Step = 1,
+	Callback = function(v) HubState.toggles.towerStartLayer=v end
+})
+HubState._configControls.towerStartLayer = { kind="value", handle=towerLayerSlider }
+
+local towerExitT = sTower:Toggle({
+	Title = "Exit on Loss",
+	Desc = "Leave the tower after a lost floor",
+	Value = false,
+	Callback = function(v) HubState.toggles.towerExitOnLoss=v end
+})
+HubState._configControls.towerExitOnLoss = { kind="toggle", handle=towerExitT }
+
+local towerTgl = sTower:Toggle({
+	Title = "Auto Tower",
+	Desc = "Enter & auto-fight floors (uses Battle-tab autos)",
+	Value = false,
+	Callback = function(v)
+		HubState.toggles.towerEnabled=v
+		if v then
+			if not HubState.toggles.autoSkill then 
+				HubState.toggles.autoSkill=true
+				if Toggles.autoSkill then Toggles.autoSkill:Set(true, false) end
+			end
+			HubState.Feature.startTowerLoop()
+			HubState._notify("Auto Tower ON","ok")
+		else 
+			HubState._notify("Auto Tower OFF", nil)
+		end
+	end
+})
+HubState._configControls.towerEnabled = { kind="toggle", handle=towerTgl }
+
+-- Settings tab (Direct WindUI API - Clean)
+local sCfg = setTab:Section({ Title="Config", Opened=true })
+local cfgNameBox = sCfg:Input({
+	Title = "Config Name",
+	Placeholder = "my_config",
+	Value = "",
+	Callback = function(v) end
+})
+
+local cfgListDD
+local autoLoadLabel
+local selectedCfg
+
+local function refreshCfgList()
+	if cfgListDD then 
+		cfgListDD:SetOptions((function()
+			local o={}
+			for _,n in ipairs(HubState.Feature.listConfigs()) do 
+				o[#o+1]={label=n, value=n}
+			end
+			return o
+		end)(), true)
+	end
+end
+
+local function updateAutoLoadLabel()
+	if autoLoadLabel then 
+		autoLoadLabel:SetText("Auto load config: "..(HubState.Feature.getAutoLoad() or "none"))
+	end
+end
+
+sCfg:Button({
+	Title = "Create Config",
+	Callback = function()
+		local name = cfgNameBox.Value or cfgNameBox:Get()
+		local ok, msg = HubState.Feature.saveConfig(name, false)
+		if ok then 
+			HubState._notify("Config saved: "..name, "ok")
+			refreshCfgList()
+		elseif msg=="exists" then 
+			HubState._notify("Exists — use Overwrite", "err")
+		else 
+			HubState._notify("Save failed: "..tostring(msg), "err")
+		end
+	end
+})
+
+cfgListDD = createDropdownWrapper(sCfg, {
+	title = "Config List",
+	desc = "Saved configs",
+	options = {},
+	default = false,
+	onChange = function(v) selectedCfg=v end
+})
+
+sCfg:Button({
+	Title = "Load Config",
+	Callback = function()
+		if not selectedCfg then 
+			HubState._notify("Pick a config", "err")
+			return
+		end
+		local ok = HubState.Feature.loadConfig(selectedCfg)
+		HubState._notify(
+			ok and ("Loaded: "..selectedCfg) or "Load failed",
+			ok and "ok" or "err"
+		)
+	end
+})
+
+sCfg:Button({
+	Title = "Overwrite Config",
+	Callback = function()
+		local inputName = cfgNameBox.Value or cfgNameBox:Get()
+		local name = (inputName~="" and inputName) or selectedCfg
+		if not name then 
+			HubState._notify("Name or select a config", "err")
+			return
+		end
+		local ok = HubState.Feature.saveConfig(name, true)
+		HubState._notify(
+			ok and ("Overwrote: "..name) or "Overwrite failed",
+			ok and "ok" or "err"
+		)
+		refreshCfgList()
+	end
+})
+
+sCfg:Button({
+	Title = "Delete Config",
+	Callback = function()
+		if not selectedCfg then 
+			HubState._notify("Pick a config", "err")
+			return
+		end
+		local ok = HubState.Feature.deleteConfig(selectedCfg)
+		HubState._notify(
+			ok and ("Deleted: "..selectedCfg) or "Delete failed",
+			ok and "ok" or "err"
+		)
+		selectedCfg=nil
+		refreshCfgList()
+		updateAutoLoadLabel()
+	end
+})
+
+sCfg:Button({
+	Title = "Refresh List",
+	Callback = function()
+		refreshCfgList()
+		HubState._notify("Config list refreshed","ok")
+	end
+})
+
+sCfg:Button({
+	Title = "Set as Auto Load",
+	Callback = function()
+		if not selectedCfg then 
+			HubState._notify("Pick a config", "err")
+			return
+		end
+		HubState.Feature.setAutoLoad(selectedCfg)
+		updateAutoLoadLabel()
+		HubState._notify("Auto load set: "..selectedCfg, "ok")
+	end
+})
+
+sCfg:Button({
+	Title = "Delete Auto Load",
+	Callback = function()
+		HubState.Feature.clearAutoLoad()
+		updateAutoLoadLabel()
+		HubState._notify("Auto load cleared", "ok")
+	end
+})
+
+-- Bootstrap
+task.defer(function()
+	-- boss-hop
+	local bs = HubState.Feature.loadBossState and HubState.Feature.loadBossState()
+	if bs and bs.autoHopBoss and bs.autoFarmBoss and bs.bossId then
+		HubState.toggles.bossTargetId = bs.bossId
+		HubState.toggles.hopCooldownSec = bs.hopCooldownSec or 20
+		if hopSlider then hopSlider:Set(HubState.toggles.hopCooldownSec) end
+		if bossDD then bossDD:Set(bs.bossId, false) end
+		HubState.toggles.bossEnabled = true; if bossTgl then bossTgl:SetSilent(true) end
+		HubState.toggles.autoHopBoss = true; if hopTgl then hopTgl:SetSilent(true) end
+		if not HubState.toggles.autoSkill then HubState.toggles.autoSkill=true; if Toggles.autoSkill then Toggles.autoSkill:SetSilent(true) end end
+		HubState.Engage.boss.start()
+		HubState._notify("Resumed boss auto-hop after server hop", "ok")
+	end
+	-- auto load config
+	local al = HubState.Feature.getAutoLoad and HubState.Feature.getAutoLoad()
+	if al and not (bs and bs.autoHopBoss) then
+		local ok = HubState.Feature.loadConfig(al)
+		if ok then
+			HubState._notify("Auto-loaded config: "..al, "ok")
+			if updateAutoLoadLabel then updateAutoLoadLabel() end
+		end
+	end
+end)
+
+if typeof(getgenv)=="function" then getgenv().JinHub = HubState end
+return HubState
