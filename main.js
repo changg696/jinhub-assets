@@ -1,9 +1,8 @@
-
 window.JinHubKeySystem = window.JinHubKeySystem || {};
 
 window.JinHubKeySystem.init = function(slug, cfg){
   const API = '/api/getkey/' + slug;
-  const PENDING_KEY = 'jinhub_pending_' + slug; // {token, verified} -- biar kalau user refresh gak ilang
+  const PENDING_KEY = 'jinhub_pending_' + slug; // {v1, verified} -- biar kalau user refresh gak ilang
   const KEYS_CACHE_KEY = 'jinhub_keys_cache_' + slug; // cache list keys terakhir, biar tabel gak flash kosong pas reload
   const COOLDOWN_MS = 30 * 1000; // HARUS sama kaya START_COOLDOWN_MS di src/api/getkey.js
 
@@ -167,87 +166,13 @@ window.JinHubKeySystem.init = function(slug, cfg){
     el.note.hidden = false;
   }
 
-  // Custom Modal System - New Design (from success_modal.html)
-  function showAlert(type, title, text, options){
-    // Remove existing modal if any
-    const existing = document.querySelector('[data-jh-modal]');
-    if(existing) existing.remove();
-    
-    // Icons for different types (animated SVG)
-    const icons = {
-      success: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #22c55e;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" d="M8 12l3 3l5 -5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="14;0"/></path></g></svg>',
-      error: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #ef4444;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M12 12l4 4M12 12l-4 -4M12 12l4 -4M12 12l-4 4"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="8;0"/></path></g></svg>',
-      warning: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #f59e0b;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 7v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="6;0"/></path><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.95s" dur="0.2s" values="0;1"/></circle></g></svg>',
-      info: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #3b82f6;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="64" stroke-dashoffset="64" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z"><animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.15s" values="0;0.3"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><circle cx="12" cy="8" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.75s" dur="0.2s" values="0;1"/></circle><path stroke-dasharray="10" stroke-dashoffset="10" d="M12 11v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.2s" values="10;0"/></path></g></svg>',
-      loading: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" style="color: #7c6bf0;"><g stroke="currentColor"><circle cx="12" cy="12" r="9.5" fill="none" stroke-linecap="round" stroke-width="3"><animate attributeName="stroke-dasharray" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0 150;42 150;42 150;42 150"/><animate attributeName="stroke-dashoffset" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0;-16;-59;-59"/></circle><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></g></svg>'
-    };
-    
-    options = options || {};
-    const showProgress = options.showProgress || false;
-    const progressCurrent = options.progressCurrent || 0;
-    const progressTotal = options.progressTotal || 0;
-    
-    // Create overlay (backdrop)
-    const overlay = document.createElement('div');
-    overlay.setAttribute('data-jh-modal', 'true');
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(8px); padding: 1rem;';
-    
-    // Create modal container (NEW DESIGN from success_modal.html)
-    const modal = document.createElement('div');
-    modal.style.cssText = 'width: 272px; background: rgba(13, 13, 15, 1); border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.08); padding: 1.1rem 1.2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.6); font-family: Geist, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
-    
-    // Build modal HTML (matching success_modal.html structure)
-    let progressHTML = '';
-    if(showProgress && progressTotal > 0){
-      let progressBars = '';
-      for(let i = 0; i < progressTotal; i++){
-        progressBars += '<div style="width: 18px; height: 3px; border-radius: 2px; background: ' + (i < progressCurrent ? '#7c6bf0' : 'rgba(124, 107, 240, 0.2)') + ';"></div>';
-      }
-      progressHTML = '<div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 12px;">' +
-        progressBars +
-        '<span style="font-size: 10px; color: #8a8a92; margin-left: 5px;">' + progressCurrent + ' / ' + progressTotal + '</span>' +
-      '</div>';
-    }
-    
-    modal.innerHTML = 
-      '<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px;">' +
-        '<h3 style="margin: 0; font-size: 14.5px; color: #f5f5f7; font-weight: 500;">' + title + '</h3>' +
-        '<button aria-label="Close" onclick="this.closest(\'[data-jh-modal]\').remove()" style="width: 20px; height: 20px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); border: none; flex-shrink: 0; margin-left: 8px; cursor: pointer;"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
-      '</div>' +
-      '<p style="font-size: 11px; color: #8a8a92; margin: 0 0 14px; line-height: 1.5;">' + text + '</p>' +
-      progressHTML +
-      '<div style="display: flex; justify-content: center; margin-bottom: ' + (showProgress ? '12px' : '8px') + ';">' +
-        (icons[type] || icons.info) +
-      '</div>';
-    
-    // Add bottom text if checkpoint verified (matching success_modal.html)
-    if(type === 'success' && showProgress){
-      modal.innerHTML += '<p style="text-align: center; font-weight: 500; font-size: 12.5px; margin: 0 0 4px; color: #f5f5f7;">All tasks verified</p>' +
-        '<p style="text-align: center; font-size: 10.5px; color: #8a8a92; margin: 0; line-height: 1.5;">The provider has confirmed your completed tasks successfully.</p>';
-    }
-    
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-    
-    // Animate in (scale + fade)
-    setTimeout(function(){
-      modal.style.transform = 'scale(1)';
-      modal.style.opacity = '1';
-    }, 10);
-    
-    // Auto-close after 2.5 seconds (except loading type)
-    if(type !== 'loading'){
-      setTimeout(function(){
-        modal.style.transform = 'scale(0.9)';
-        modal.style.opacity = '0';
-        setTimeout(function(){ 
-          if(overlay.parentNode) overlay.remove(); 
-        }, 300);
-      }, 2500);
-    }
-    
-    return overlay;
-  }
+  // Notifikasi/modal popup (checkpoint timeout, checkpoint sukses/error,
+  // session expired, limit reached, key created/renewed, dll) SUDAH DIHAPUS
+  // TOTAL sesuai permintaan. Fungsi ini dibiarkan sebagai stub kosong biar
+  // semua pemanggil showAlert(...) di file ini tetap jalan normal tanpa
+  // error -- logic checkpoint/renew/dll TIDAK berubah, cuma popup
+  // visualnya yang sudah tidak ada lagi.
+  function showAlert(type, title, text, options){}
 
   function render(){
     const hasActiveKeys = state.activeKeys && state.activeKeys.length > 0;
@@ -705,50 +630,9 @@ window.JinHubKeySystem.init = function(slug, cfg){
   function copyKey(keyString){
     if(!keyString) return;
     
-    const showCopyModal = function(success){
-      // Remove existing modal if any
-      const existing = document.querySelector('[data-jh-copy-modal]');
-      if(existing) existing.remove();
-      
-      const iconSvg = success 
-        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><path d="M20 6L9 17l-5-5"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-      
-      const iconColor = success ? '#10b981' : '#ef4444';
-      const title = success ? 'Copied!' : 'Copy Failed';
-      const text = success ? 'Key copied to clipboard successfully' : 'Failed to copy key';
-      
-      // Create overlay with FULL inline styles
-      const overlay = document.createElement('div');
-      overlay.setAttribute('data-jh-copy-modal', 'true');
-      overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); animation: fadeIn 0.2s ease;';
-      
-      // Create modal with FULL inline styles
-      const modal = document.createElement('div');
-      modal.style.cssText = 'background: linear-gradient(145deg, #1a1a2e, #16192b); border-radius: 20px; padding: 40px 32px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 400px; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
-      
-      modal.innerHTML = '<div style="width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; background: rgba(' + (success ? '16, 185, 129' : '239, 68, 68') + ', 0.1); display: flex; align-items: center; justify-content: center; color: ' + iconColor + ';">' + iconSvg + '</div>' +
-        '<h2 style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 0 0 8px; font-family: Space Grotesk, sans-serif;">' + title + '</h2>' +
-        '<p style="font-size: 15px; color: rgba(255,255,255,0.8); margin: 0; font-family: Space Grotesk, sans-serif; line-height: 1.5;">' + text + '</p>';
-      
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-      
-      // Animate in
-      setTimeout(function(){
-        modal.style.transform = 'scale(1)';
-        modal.style.opacity = '1';
-      }, 10);
-      
-      // Auto-close after 2 seconds
-      setTimeout(function(){
-        modal.style.transform = 'scale(0.9)';
-        modal.style.opacity = '0';
-        setTimeout(function(){ 
-          if(overlay.parentNode) overlay.remove(); 
-        }, 200);
-      }, 2000);
-    };
+    // Modal "Copied!"/"Copy Failed" SUDAH DIHAPUS TOTAL sesuai permintaan.
+    // Stub kosong ini bikin done(success) di bawah tetap aman dipanggil.
+    const showCopyModal = function(success){};
     
     const done = function(success){
       const allCopyBtns = document.querySelectorAll('[data-pk-copy]');
