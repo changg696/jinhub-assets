@@ -3,7 +3,7 @@ window.JinHubKeySystem = window.JinHubKeySystem || {};
 
 window.JinHubKeySystem.init = function(slug, cfg){
   const API = '/api/getkey/' + slug;
-  const PENDING_KEY = 'jinhub_pending_' + slug; // {v1, verified} -- biar kalau user refresh gak ilang
+  const PENDING_KEY = 'jinhub_pending_' + slug; // {token, verified} -- biar kalau user refresh gak ilang
   const KEYS_CACHE_KEY = 'jinhub_keys_cache_' + slug; // cache list keys terakhir, biar tabel gak flash kosong pas reload
   const COOLDOWN_MS = 30 * 1000; // HARUS sama kaya START_COOLDOWN_MS di src/api/getkey.js
 
@@ -55,18 +55,20 @@ window.JinHubKeySystem.init = function(slug, cfg){
     const cached = loadKeysCache();
     if(!cached || !cached.keys || !cached.keys.length) return;
     
-    // NEW LOGIC: Always restore cache (don't skip if expired keys exist)
-    // This prevents "blank screen" on page load when one key expires
+    // SKIP cache kalau ada expired keys di dalamnya (biar force refresh dari API)
+    // Ini handle kasus user manual edit KV (expiresAt = 0) tapi localStorage masih lama
     const now = Date.now();
+    const hasExpiredInCache = cached.keys.some(k => k.expiresAt && k.expiresAt <= now);
+    if(hasExpiredInCache){
+      console.log('[KeySystem] Cache has expired keys, skipping cache restore (force fresh from API)');
+      return; // Skip cache, biar refreshState() fetch dari API langsung
+    }
     
     state.keys = cached.keys;
     state.totalKeys = cached.totalKeys || cached.keys.length;
     state.remaining = cached.remaining != null ? cached.remaining : state.remaining;
     state.activeKeys = state.keys.filter(k => k.expiresAt && k.expiresAt > now).map(k => k.key);
     state.expiredKeys = state.keys.filter(k => k.expiresAt && k.expiresAt <= now).map(k => k.key);
-    
-    console.log('[KeySystem] Cache restored:', state.activeKeys.length, 'active,', state.expiredKeys.length, 'expired');
-    render();
   })();
   let waiting = false;             // lagi nunggu checkpoint dikonfirmasi provider
   let checkpointVerified = false;  // checkpoint UDAH dikonfirmasi tapi user BELUM milih aksi
@@ -842,54 +844,34 @@ window.JinHubKeySystem.init = function(slug, cfg){
   // Show "Verifying tasks..." modal (with spinner, like in screenshot)
   function showVerifyingModal(){
     // Remove existing modal if any
-    const existing = document.querySelector('[data-jh-verifying]');
+    const existing = document.querySelector('.jh-modal-overlay');
     if(existing) existing.remove();
     
-    // Get provider name from current URL
-    const providerSlug = window.location.pathname.split('/')[2] || 'provider';
-    const providerName = providerSlug === 'lootlabs' ? 'LootLabs' : 
-                         providerSlug === 'linkvertise' ? 'Linkvertise' : 
-                         providerSlug === 'workink' ? 'Work.ink' : 'provider';
-    
     const overlay = document.createElement('div');
-    overlay.setAttribute('data-jh-verifying', 'true');
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(8px); padding: 1rem;';
-    
-    const modal = document.createElement('div');
-    // Desktop: 480px, Mobile: 90vw max 400px
-    modal.style.cssText = 'width: min(480px, 90vw); max-width: 480px; background: rgba(13, 13, 15, 1); border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.08); padding: 1.5rem 1.8rem; box-shadow: 0 20px 50px rgba(0,0,0,0.6); font-family: Geist, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);';
-    
-    modal.innerHTML = 
-      '<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px;">' +
-        '<h3 style="margin: 0; font-size: 16px; color: #f5f5f7; font-weight: 500;">Verification in progress</h3>' +
-        '<button aria-label="Close" onclick="this.closest(\'[data-jh-verifying]\').remove()" style="width: 22px; height: 22px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); border: none; flex-shrink: 0; margin-left: 8px; cursor: pointer;"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
+    overlay.className = 'jh-modal-overlay jh-modal-fade-in';
+    overlay.setAttribute('data-jh-verifying', 'true'); // Mark as verifying modal for easy reference
+    // Force z-index inline to ensure visibility
+    overlay.style.cssText = 'position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;';
+    overlay.innerHTML = '<div class="jh-modal jh-modal-scale-in">' +
+      '<button class="jh-modal-close" onclick="this.closest(\'.jh-modal-overlay\').remove()">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+      '</button>' +
+      '<h2 class="jh-modal-title">Verification in progress</h2>' +
+      '<p class="jh-modal-subtitle">Keep this tab open. The key flow will finish here.</p>' +
+      '<div class="jh-modal-checkpoint-progress">' +
+        '<span>CHECKPOINT 1 / 1</span>' +
       '</div>' +
-      '<p style="font-size: 12.5px; color: #8a8a92; margin: 0 0 16px; line-height: 1.5;">Keep this tab open. The key flow will finish here.</p>' +
-      '<div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 16px;">' +
-        '<div style="width: 18px; height: 3px; border-radius: 2px; background: #7c6bf0;"></div>' +
-        '<div style="width: 18px; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.15);"></div>' +
-        '<div style="width: 18px; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.15);"></div>' +
-        '<span style="font-size: 10.5px; color: #8a8a92; margin-left: 5px;">1 / ' + requiredCheckpoints + '</span>' +
+      '<div class="jh-modal-icon jh-modal-spinner" style="color: #3b82f6">' +
+        '<svg class="jh-spinner" viewBox="0 0 24 24" fill="none">' +
+          '<circle class="jh-spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>' +
+        '</svg>' +
       '</div>' +
-      '<div style="display: flex; justify-content: center; margin-bottom: 16px;">' +
-        '<svg class="fastspin" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 50 50" style="color: #ffffff;"><path fill="currentColor" d="M41.9 23.9c-.3-6.1-4-11.8-9.5-14.4c-6-2.7-13.3-1.6-18.3 2.6c-4.8 4-7 10.5-5.6 16.6c1.3 6 6 10.9 11.9 12.5c7.1 2 13.6-1.4 17.6-7.2c-3.6 4.8-9.1 8-15.2 6.9s-11.1-5.7-12.5-11.7c-1.5-6.4 1.5-13.1 7.2-16.4c5.9-3.4 14.2-2.1 18.1 3.7c1 1.4 1.7 3.1 2 4.8c.3 1.4.2 2.9.4 4.3c.2 1.3 1.3 3 2.8 2.1c1.3-.8 1.2-2.5 1.1-3.8c0-.4.1.7 0 0"/></svg>' +
-      '</div>' +
-      '<style>.fastspin{animation:spin 0.4s linear infinite;transform-origin:center;}@keyframes spin{to{transform:rotate(360deg);}}</style>' +
-      '<p style="text-align: center; font-weight: 500; font-size: 13.5px; margin: 0 0 4px; color: #f5f5f7;">Verifying tasks…</p>' +
-      '<p style="text-align: center; font-size: 11.5px; color: #8a8a92; margin: 0 0 16px; line-height: 1.5;">Waiting for ' + providerName + ' to confirm your completed tasks. This takes a few seconds.</p>' +
-      '<div style="display: flex; justify-content: center;">' +
-        '<button onclick="this.closest(\'[data-jh-verifying]\').remove()" style="font-size: 12px; color: #8a8a92; border: none; background: none; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: color 0.2s;">Cancel</button>' +
-      '</div>';
+      '<h3 class="jh-modal-verifying-title">Verifying tasks...</h3>' +
+      '<p class="jh-modal-verifying-text">Waiting for LootLabs to confirm your completed tasks. This takes a few seconds.</p>' +
+      '<button class="jh-modal-cancel" onclick="this.closest(\'.jh-modal-overlay\').remove()">Cancel</button>' +
+    '</div>';
     
-    overlay.appendChild(modal);
     document.body.appendChild(overlay);
-    
-    // Animate in
-    setTimeout(function(){
-      modal.style.transform = 'scale(1)';
-      modal.style.opacity = '1';
-    }, 10);
-    
     return overlay;
   }
   
