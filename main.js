@@ -3,7 +3,7 @@ window.JinHubKeySystem = window.JinHubKeySystem || {};
 
 window.JinHubKeySystem.init = function(slug, cfg){
   const API = '/api/getkey/' + slug;
-  const PENDING_KEY = 'jinhub_pending_' + slug; // {token, verified} -- biar kalau user refresh gak ilang
+  const PENDING_KEY = 'jinhub_pending_' + slug; // {v1, verified} -- biar kalau user refresh gak ilang
   const KEYS_CACHE_KEY = 'jinhub_keys_cache_' + slug; // cache list keys terakhir, biar tabel gak flash kosong pas reload
   const COOLDOWN_MS = 30 * 1000; // HARUS sama kaya START_COOLDOWN_MS di src/api/getkey.js
 
