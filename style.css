@@ -596,8 +596,239 @@ html{
   }
 }
 
-/* ===== CUSTOM MODAL SYSTEM (All inline styles, no CSS classes) ===== */
-/* Modal styles removed - using inline styles for better isolation */
+/* ===== CUSTOM MODAL SYSTEM (Modern, No SweetAlert2) ===== */
+.jh-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.jh-modal {
+  position: relative;
+  width: min(480px, 90vw);
+  max-width: 90vw;
+  background: linear-gradient(145deg, #1a1a2e 0%, #16192b 100%);
+  border-radius: 20px;
+  padding: 32px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.jh-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+}
+
+.jh-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.jh-modal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.jh-modal-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.jh-modal-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.jh-modal-spinner {
+  background: transparent;
+}
+
+.jh-spinner {
+  animation: jh-spin 1s linear infinite;
+}
+
+.jh-spinner-circle {
+  stroke-dasharray: 50, 200;
+  stroke-dashoffset: 0;
+  animation: jh-spinner-dash 1.5s ease-in-out infinite;
+  stroke-linecap: round;
+  fill: none;
+}
+
+@keyframes jh-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes jh-spinner-dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+  }
+}
+
+.jh-modal-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #ffffff;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.jh-modal-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 20px 0;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.jh-modal-checkpoint-progress {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 8px 16px;
+  display: inline-block;
+  margin-bottom: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.jh-modal-verifying-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 20px 0 8px 0;
+  color: #ffffff;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.jh-modal-verifying-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.jh-modal-text {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  line-height: 1.6;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.jh-modal-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.jh-modal-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Animations */
+.jh-modal-fade-in {
+  animation: jh-modal-fade-in 0.3s ease-out forwards;
+}
+
+.jh-modal-fade-out {
+  animation: jh-modal-fade-out 0.2s ease-in forwards;
+}
+
+.jh-modal-scale-in {
+  animation: jh-modal-scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.jh-modal-scale-out {
+  animation: jh-modal-scale-out 0.2s ease-in forwards;
+}
+
+@keyframes jh-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes jh-modal-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes jh-modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes jh-modal-scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
 
 /* ===== TOAST NOTIFICATIONS (Bottom) ===== */
 .jh-toast {
